@@ -1,0 +1,82 @@
+#server config
+server:
+  port: 9091
+
+#spring app config
+spring:
+   application:
+     name: auth-service
+
+   datasource:
+     url: jdbc:mysql://localhost:3306/transport_auth_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+     username: root
+     password: root
+     driver-class-name: com.mysql.cj.jdbc.Driver
+
+   jpa:
+     hibernate:
+       ddl-auto: update
+
+     show-sql: true
+
+     properties:
+       hibernate:
+         format_sql: true
+
+     database-platform: org.hibernate.dialect.MySQLDialect
+
+
+
+# Jwt config
+jwt:
+  secret: this-is-a-very-long-secret-key-change-in-production-min-256bits
+  access-token-expiry: 900000   #15 min in ms
+  refresh-token-expiry: 604800000 #7 days in ms
+
+
+#otp config
+otp:
+  expiry-minutes: 5
+  max-attempts: 3
+
+
+#eureka config
+eureka:
+  client:
+    defaultZone: http://localhost:8761/eureka/
+  instance:
+    perfer-ip-address: true
+
+
+#logging config
+logging:
+  level:
+    root: INFO
+    com.transport.auth: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger {36} - %msg%n"
+
+
+#App config
+app:
+  environment: dev
+  sms:
+    mode: console
+
+
+
+
+## msg91 services Config
+#msg91:
+#  auth-key: 548558AofrGGQntZ6a4e388bP1
+#  template-id: your_temp_id
+#  base-url: https://control.msg91.com/api/v5/otp
+#  otp-expiry-minutes: 5
+
+
+
+
+
+
+
+

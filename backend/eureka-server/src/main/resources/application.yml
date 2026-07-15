@@ -1,0 +1,33 @@
+#spring.application.name=TRANSPORT_SYS_PROJECT
+
+server:
+  port: 8761
+
+spring:
+  application:
+    name: eureka-server
+
+eureka:
+  instance:
+    hostname: localhost
+
+  client:
+  # Eureka server cannot register itself as client
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
+
+
+  server:
+    #Wait time before removing a dead service (in ms)
+    eviction-interval-timer-in-ms: 10000
+    enable-self-preservation: false
+
+
+#Logging
+logging:
+  level:
+    com.netflix.eureka: INFO
+    com.netflix.descovery: INFO
+
