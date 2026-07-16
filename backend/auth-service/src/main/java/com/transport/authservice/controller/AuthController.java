@@ -152,6 +152,87 @@ public class AuthController {
     }
 
 
+
+    // =================== User flow ==============
+
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponseDto<UserResponseDto>> getCurrentUser(Authentication authentication) {
+        Long userId = Long.parseLong(authentication.getName());
+        UserResponseDto user = authService.getCurrentUser(userId);
+        return ResponseEntity.ok(ApiResponseDto.success("User fetched successfully", user));
+    }
+    
+    @PatchMapping("/profile")
+    public ResponseEntity<ApiResponseDto<UserResponseDto>> updateProfile(
+            Authentication authentication,
+            @Valid @RequestBody UpdateProfileRequestDto dto) {
+
+        Long userId = Long.parseLong(authentication.getName());
+        UserResponseDto user = authService.updateProfile(userId, dto);
+        return ResponseEntity.ok(ApiResponseDto.success("Profile updated successfully", user));
+    }
+    
+    
+    @PostMapping("/email/send-otp")
+    public ResponseEntity<ApiResponseDto<Void>> sendEmailOtp(Authentication authentication) {
+        Long userId = Long.parseLong(authentication.getName());
+        authService.sendEmailVerificationOtp(userId);
+        return ResponseEntity.ok(ApiResponseDto.success("OTP sent to your email"));
+    }
+
+    @PostMapping("/email/verify-otp")
+    public ResponseEntity<ApiResponseDto<Void>> verifyEmailOtp(
+            Authentication authentication,
+            @Valid @RequestBody VerifyEmailOtpRequestDto dto) {
+
+        Long userId = Long.parseLong(authentication.getName());
+        authService.verifyEmailOtp(userId, dto.getOtp());
+        return ResponseEntity.ok(ApiResponseDto.success("Email verified successfully"));
+    }
+    
+    @PatchMapping("/change-password")
+    public ResponseEntity<ApiResponseDto<Void>> changePassword(
+            Authentication authentication,
+            @Valid @RequestBody ChangePasswordRequestDto dto) {
+
+        Long userId = Long.parseLong(authentication.getName());
+        authService.changePassword(userId, dto);
+        return ResponseEntity.ok(ApiResponseDto.success("Password changed successfully"));
+    }
+
+    @GetMapping("/admin/users")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponseDto<List<UserResponseDto>>> getAllUsers() {
+        return ResponseEntity.ok(ApiResponseDto.success("Users fetched successfully", authService.getAllUsers()));
+    }
+
+    @PostMapping("/admin/create-staff")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TRANSPORT_MANAGER')")
+    public ResponseEntity<ApiResponseDto<UserResponseDto>> createStaff(
+            @Valid @RequestBody CreateStaffRequestDto dto) {
+        UserResponseDto user = authService.createStaffAccount(dto);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponseDto.success("Staff account created successfully", user));
+    }
+
+    @PatchMapping("/admin/users/{userId}/role")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponseDto<UserResponseDto>> updateUserRole(
+            @PathVariable Long userId,
+            @Valid @RequestBody UpdateUserRoleRequestDto dto) {
+        UserResponseDto user = authService.updateUserRole(userId, dto.getRole());
+        return ResponseEntity.ok(ApiResponseDto.success("Role updated successfully", user));
+    }
+
+    @PatchMapping("/admin/users/{userId}/status")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TRANSPORT_MANAGER')")
+    public ResponseEntity<ApiResponseDto<UserResponseDto>> updateUserStatus(
+            @PathVariable Long userId,
+            @Valid @RequestBody UpdateUserStatusRequestDto dto) {
+        UserResponseDto user = authService.updateUserStatus(userId, dto.getActive());
+        return ResponseEntity.ok(ApiResponseDto.success("Status updated successfully", user));
+    }
+
 //================ HELPER =====================
     private String extractMobileFromToken(String authHeader, String expectedType) {
 

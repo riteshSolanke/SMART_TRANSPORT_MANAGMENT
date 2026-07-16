@@ -1,0 +1,97 @@
+#spring.application.name=api-gateway
+
+#Application constants
+server:
+  port: 9090
+
+jwt:
+  secret: mySuperSecretKeyForJwtGeneration12345678901234567890
+
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: false
+
+      server:
+        webflux:
+          routes:
+
+            - id: auth-service
+              uri: lb://auth-service
+              predicates:
+                - Path=/api/auth/**
+
+            - id: route-service
+              uri: lb://route-service
+              predicates:
+                - Path=/api/routes/**
+              filters:
+                - name: JwtAuthFilter
+
+            - id: ticket-service
+              uri: lb://ticket-service
+              predicates:
+                - Path=/api/tickets/**
+              filters:
+                - name: JwtAuthFilter
+
+            - id: vehicle-service
+              uri: lb://vehicle-service
+              predicates:
+                - Path=/api/vehicles/**
+              filters:
+                - name: JwtAuthFilter
+
+            - id: analytics-service
+              uri: lb://analytics-service
+              predicates:
+                - Path=/api/analytics/**
+              filters:
+                - name: JwtAuthFilter
+
+
+# Global Cors Config
+
+globalcors:
+  cors-configurations:
+    '[/**]':
+      allowedOrigins: "http://localhost:5373"
+      allowedMethods:
+        - GET
+        - POST
+        - DELETE
+        - PUT
+        - OPTIONS
+        - PATCH
+      allowedHeaders: "*"
+
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+    instance:
+      prefer-ip-address: true
+
+
+
+# Logging Config
+
+
+logging:
+  level:
+    root: INFO
+    com.transport.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} -%msg%n"
+
+
+

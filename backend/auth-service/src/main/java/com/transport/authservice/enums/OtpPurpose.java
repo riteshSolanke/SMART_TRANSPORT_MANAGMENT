@@ -4,5 +4,5 @@ public enum OtpPurpose {
     REGISTRATION,
     LOGIN,
     RESET_PASSWORD,
-    EMAIL_VERIFY
+    EMAIL_VERIFICATION 
 }

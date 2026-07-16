@@ -21,34 +21,36 @@ public class OtpService {
 
     private final OtpVerificationRepository otpRepository;
     private final OtpSender otpSender;
+    private final EmailSender emailSender;
     private final BCryptPasswordEncoder passwordEncoder;
 
     private static final int OTP_EXPIRY_MINUTES = 5;
     private static final int MAX_ATTEMPTS = 3;
     private static final SecureRandom secureRandom = new SecureRandom();
 
-    private String generateSixDigitOtp(){
-        int otp = 100000 + secureRandom.nextInt(900000);
-        return String.valueOf(otp);
-    }
-
-    public void generateAndSendOtp(String mobileNumber, OtpPurpose purpose){
+    public void generateAndSendOtp(String identifier, OtpPurpose purpose) {
         String otp = generateSixDigitOtp();
 
         OtpVerification record = OtpVerification.builder()
-                .identifier(mobileNumber)
+                .identifier(identifier)
                 .otpCode(passwordEncoder.encode(otp))
                 .purpose(purpose)
                 .expiresAt(LocalDateTime.now().plusMinutes(OTP_EXPIRY_MINUTES))
                 .build();
 
         otpRepository.save(record);
-        otpSender.send(mobileNumber, otp);
 
-        log.info("OTP generated for {} with purpose {}", mobileNumber, purpose);
+        if (purpose == OtpPurpose.EMAIL_VERIFICATION) {
+            emailSender.sendOtp(identifier, otp);
+        } else {
+            otpSender.send(identifier, otp);
+        }
 
+        log.info("OTP generated for {} with purpose {}", identifier, purpose);
     }
 
+    // verifyOtp() stays EXACTLY the same — no changes needed, it's already generic
+}
 
     public void verifyOtp(String mobileNumber, String otpInput, OtpPurpose purpose){
 

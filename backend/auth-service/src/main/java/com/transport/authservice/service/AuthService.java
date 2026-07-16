@@ -249,6 +249,140 @@ public class AuthService {
         refreshTokenRepository.deleteByUserId(userId);
         log.info("User logged out: userId={}", userId);
     }
+    
+//    =================== User flow ===================
+    public UserResponseDto getCurrentUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("user.not.found"));
 
+        return toUserResponseDto(user);
+    }
+    
+    
+    @Transactional
+    public UserResponseDto updateProfile(Long userId, UpdateProfileRequestDto dto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("user.not.found"));
+
+        if (dto.getName() != null && !dto.getName().isBlank()) {
+            user.setName(dto.getName());
+        }
+
+        if (dto.getEmail() != null && !dto.getEmail().equals(user.getEmail())) {
+            if (userRepository.existsByEmail(dto.getEmail())) {
+                throw new DuplicateResourceException("email.already.exists");
+            }
+            user.setEmail(dto.getEmail());
+            user.setEmailVerified(false);   // changing email always requires re-verification
+        }
+
+        user = userRepository.save(user);
+        log.info("Profile updated for userId={}", userId);
+        return toUserResponseDto(user);
+    }
+
+    public void sendEmailVerificationOtp(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("user.not.found"));
+
+        if (user.getEmail() == null || user.getEmail().isBlank()) {
+            throw new ResourceNotFoundException("email.not.set");
+        }
+
+        if (user.isEmailVerified()) {
+            throw new DuplicateResourceException("email.already.verified");
+        }
+
+        otpService.generateAndSendOtp(user.getEmail(), OtpPurpose.EMAIL_VERIFICATION);
+    }
+
+    @Transactional
+    public void verifyEmailOtp(Long userId, String otp) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("user.not.found"));
+
+        otpService.verifyOtp(user.getEmail(), otp, OtpPurpose.EMAIL_VERIFICATION);
+
+        user.setEmailVerified(true);
+        userRepository.save(user);
+
+        log.info("Email verified for userId={}", userId);
+    }
+    
+    @Transactional
+    public void changePassword(Long userId, ChangePasswordRequestDto dto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("user.not.found"));
+
+        if (user.getPasswordHash() == null
+                || !passwordEncoder.matches(dto.getCurrentPassword(), user.getPasswordHash())) {
+            throw new InvalidCredentialsException("credentials.invalid");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(dto.getNewPassword()));
+        userRepository.save(user);
+
+        refreshTokenRepository.deleteByUserId(userId);   // force re-login elsewhere
+        log.info("Password changed for userId={}", userId);
+    }
+    
+    public List<UserResponseDto> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(this::toUserResponseDto)
+                .toList();
+    }
+
+    @Transactional
+    public UserResponseDto createStaffAccount(CreateStaffRequestDto dto) {
+        if (userRepository.existsByMobileNumber(dto.getMobileNumber())) {
+            throw new DuplicateResourceException("mobile.already.registered");
+        }
+        if (dto.getRole() == Role.PASSENGER || dto.getRole() == Role.ADMIN) {
+            throw new IllegalArgumentException("Use this endpoint only for staff roles");
+        }
+
+        User user = User.builder()
+                .mobileNumber(dto.getMobileNumber())
+                .name(dto.getName())
+                .email(dto.getEmail())
+                .passwordHash(passwordEncoder.encode(dto.getPassword()))
+                .role(dto.getRole())
+                .mobileVerified(true)   // admin-created, trusted directly
+                .emailVerified(false)
+                .active(true)
+                .preferredLanguage("en")
+                .build();
+
+        user = userRepository.save(user);
+        log.info("Staff account created: userId={}, role={}", user.getUserId(), dto.getRole());
+        return toUserResponseDto(user);
+    }
+
+    @Transactional
+    public UserResponseDto updateUserRole(Long targetUserId, Role newRole) {
+        User user = userRepository.findById(targetUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("user.not.found"));
+
+        user.setRole(newRole);
+        userRepository.save(user);
+        log.info("Role updated for userId={} to {}", targetUserId, newRole);
+        return toUserResponseDto(user);
+    }
+
+    @Transactional
+    public UserResponseDto updateUserStatus(Long targetUserId, boolean active) {
+        User user = userRepository.findById(targetUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("user.not.found"));
+
+        user.setActive(active);
+        userRepository.save(user);
+
+        if (!active) {
+            refreshTokenRepository.deleteByUserId(targetUserId);   // force logout immediately
+        }
+
+        log.info("Status updated for userId={} to active={}", targetUserId, active);
+        return toUserResponseDto(user);
+    }
 
 }
