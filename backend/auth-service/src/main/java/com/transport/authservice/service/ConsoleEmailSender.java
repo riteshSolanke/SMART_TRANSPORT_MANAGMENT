@@ -1,8 +1,10 @@
 package com.transport.authservice.service;
 
-	
-	
-	@Slf4j
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
+    @Slf4j
 	@Service
 	public class ConsoleEmailSender implements EmailSender {
 	    @Override

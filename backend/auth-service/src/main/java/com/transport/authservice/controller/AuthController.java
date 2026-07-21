@@ -4,6 +4,7 @@ package com.transport.authservice.controller;
 import com.transport.authservice.dto.request.*;
 import com.transport.authservice.dto.response.ApiResponseDto;
 import com.transport.authservice.dto.response.AuthResponseDto;
+import com.transport.authservice.dto.response.UserResponseDto;
 import com.transport.authservice.service.AuthService;
 import com.transport.authservice.service.JwtService;
 import com.transport.authservice.util.MessageUtil;
@@ -13,11 +14,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Locale;
 
 @Slf4j

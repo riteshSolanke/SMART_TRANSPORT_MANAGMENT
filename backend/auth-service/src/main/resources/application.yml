@@ -43,9 +43,10 @@ otp:
 #eureka config
 eureka:
   client:
-    defaultZone: http://localhost:8761/eureka/
+    service-url:
+     defaultZone: http://localhost:8761/eureka/
   instance:
-    perfer-ip-address: true
+    prefer-ip-address: true
 
 
 #logging config
@@ -53,6 +54,8 @@ logging:
   level:
     root: INFO
     com.transport.auth: DEBUG
+    org.springframework.security: DEBUG
+
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger {36} - %msg%n"
 

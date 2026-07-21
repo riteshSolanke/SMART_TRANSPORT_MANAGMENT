@@ -14,6 +14,7 @@ import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -27,6 +28,11 @@ public class OtpService {
     private static final int OTP_EXPIRY_MINUTES = 5;
     private static final int MAX_ATTEMPTS = 3;
     private static final SecureRandom secureRandom = new SecureRandom();
+
+    private String generateSixDigitOtp(){
+        int otp = 100000 + secureRandom.nextInt(900000);
+        return String.valueOf(otp);
+    }
 
     public void generateAndSendOtp(String identifier, OtpPurpose purpose) {
         String otp = generateSixDigitOtp();
@@ -49,30 +55,36 @@ public class OtpService {
         log.info("OTP generated for {} with purpose {}", identifier, purpose);
     }
 
-    // verifyOtp() stays EXACTLY the same — no changes needed, it's already generic
-}
+
+
 
     public void verifyOtp(String mobileNumber, String otpInput, OtpPurpose purpose){
 
-       OtpVerification record = otpRepository.findTopByIdentifierAndPurposeAndUsedFalseOrderByCreatedAtDesc(mobileNumber, purpose)
-               .orElseThrow(() -> new InvalidTokenException("otp.expired"));
+        OtpVerification record = otpRepository.findTopByIdentifierAndPurposeAndUsedFalseOrderByCreatedAtDesc(mobileNumber, purpose)
+                .orElseThrow(() -> new InvalidTokenException("otp.expired"));
 
-       if(record.getAttemptCount() >= MAX_ATTEMPTS){
-           throw new RuntimeException("otp.max.attempts");
-       }
+        if(record.getAttemptCount() >= OtpService.MAX_ATTEMPTS){
+            throw new RuntimeException("otp.max.attempts");
+        }
 
-       if(!passwordEncoder.matches(otpInput, record.getOtpCode())){
-           record.setAttemptCount(record.getAttemptCount()+ 1);
-           otpRepository.save(record);
-           throw new InvalidTokenException("otp.invalid");
-       }
+        if(!passwordEncoder.matches(otpInput, record.getOtpCode())){
+            record.setAttemptCount(record.getAttemptCount()+ 1);
+            otpRepository.save(record);
+            throw new InvalidTokenException("otp.invalid");
+        }
 
-       record.setUsed(true);
-       otpRepository.save(record);
 
-       log.info("OTP verified successfully for {} with purpose {}", mobileNumber, purpose);
 
+        record.setUsed(true);
+        otpRepository.save(record);
+
+        log.info("OTP verified successfully for {} with purpose {}", mobileNumber, purpose);
 
     }
 
+
 }
+
+
+
+

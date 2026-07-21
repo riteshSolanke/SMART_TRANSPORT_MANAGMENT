@@ -45,6 +45,8 @@
             <scope>runtime</scope>
             <optional>true</optional>
         </dependency>
+
+
      <!--      DATA JPA  -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

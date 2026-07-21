@@ -30,8 +30,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest req, @NonNull HttpServletResponse res, @NonNull FilterChain filterChain ) throws ServletException, IOException {
-
+        log.info("REQUEST URI = {}", req.getRequestURI());
         String authHeader = req.getHeader("Authorization");
+        log.info("AUTH HEADER = {}", authHeader);
+
 
 //        No token present - let it pass through; SecurityConfig decides if route needs auth
         if(authHeader == null || !authHeader.startsWith("Bearer ")){

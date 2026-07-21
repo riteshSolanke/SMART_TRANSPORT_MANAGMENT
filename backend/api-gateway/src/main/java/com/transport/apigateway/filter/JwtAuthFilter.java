@@ -20,22 +20,18 @@ import java.security.Key;
 import java.time.LocalDateTime;
 import java.util.List;
 import com.transport.apigateway.dto.ErrorResponseDto;
-
-import org.apache.logging.slf4j.SLF4JLogBuilder;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+
 
 @Slf4j
 @Component
 public class JwtAuthFilter extends AbstractGatewayFilterFactory<JwtAuthFilter.Config>{
 
-
     @Value("${jwt.secret}")
     private String secret;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
+
 
     public JwtAuthFilter(){
         super(Config.class);
@@ -85,10 +81,11 @@ public class JwtAuthFilter extends AbstractGatewayFilterFactory<JwtAuthFilter.Co
         };
     }
 
+
+
     private Key getSigningKey(){
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
-
 
 
     private reactor.core.publisher.Mono<Void> onError(ServerWebExchange exchange, String message, HttpStatus status){
@@ -105,16 +102,7 @@ public class JwtAuthFilter extends AbstractGatewayFilterFactory<JwtAuthFilter.Co
         }catch(Exception e){
             return exchange.getResponse().setComplete();
         }
-
-
     }
-
-
-
-
-
-
-
 
 
     public static class Config{

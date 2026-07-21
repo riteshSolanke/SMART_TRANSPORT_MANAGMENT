@@ -22,6 +22,4 @@ public class VerifyOtpRequestDto {
     private OtpPurpose purpose;
 
 
-
-
 }

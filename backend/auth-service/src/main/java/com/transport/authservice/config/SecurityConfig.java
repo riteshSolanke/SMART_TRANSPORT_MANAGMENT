@@ -33,14 +33,21 @@ public class SecurityConfig {
 
 
 //    private routes - no token req
-    private static final String[] PUBLIC_ROUTES = {
-            "/api/auth/register/**",
-            "/api/auth/login/**",
-            "/api/auth/forgot-password/**",
-            "/api/auth/refresh",
-            "/actuator/health",
-            "/swagger-ui/**",
-            "/v3/api-docs/**"
+private static final String[] PUBLIC_ROUTES = {
+        "/api/auth/register",
+        "/api/auth/register/**",
+
+        "/api/auth/login",
+        "/api/auth/login/**",
+
+        "/api/auth/forgot-password",
+        "/api/auth/forgot-password/**",
+
+        "/api/auth/refresh",
+
+        "/actuator/health",
+        "/swagger-ui/**",
+        "/v3/api-docs/**"
 };
 
     @Bean

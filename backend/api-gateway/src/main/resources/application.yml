@@ -3,6 +3,20 @@
 #Application constants
 server:
   port: 9090
+  error:
+    include-stacktrace: never
+    include-message: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+  endpoint:
+    health:
+      show-details: always
+
 
 jwt:
   secret: mySuperSecretKeyForJwtGeneration12345678901234567890
@@ -23,7 +37,7 @@ spring:
           routes:
 
             - id: auth-service
-              uri: lb://auth-service
+              uri: lb://AUTH-SERVICE
               predicates:
                 - Path=/api/auth/**
 

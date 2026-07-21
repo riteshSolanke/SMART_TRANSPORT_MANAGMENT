@@ -1,6 +1,7 @@
 package com.transport.authservice.dto.request;
 
-import com.transport.auth.enums.Role;
+
+import com.transport.authservice.enums.Role;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 

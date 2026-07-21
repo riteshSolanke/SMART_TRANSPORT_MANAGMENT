@@ -1,9 +1,7 @@
 package com.transport.authservice.service;
 
 
-import com.transport.authservice.dto.request.CompleteRegistrationRequestDto;
-import com.transport.authservice.dto.request.LoginWithPasswordRequestDto;
-import com.transport.authservice.dto.request.ResetPasswordRequestDto;
+import com.transport.authservice.dto.request.*;
 import com.transport.authservice.dto.response.AuthResponseDto;
 import com.transport.authservice.dto.response.UserResponseDto;
 import com.transport.authservice.entity.RefreshToken;
@@ -23,6 +21,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @Slf4j
