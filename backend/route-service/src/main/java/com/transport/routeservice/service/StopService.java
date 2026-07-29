@@ -8,7 +8,13 @@ import java.util.List;
 public interface StopService {
 
 
-      StopResponseDto addStop(Long routeId, StopRequestDto dto);
+     StopResponseDto addStop(Long routeId, StopRequestDto dto);
 
      List<StopResponseDto> getStopsByRoute(Long routeId);
+
+     StopResponseDto getStop(Long routeId, Long stopId);
+
+     StopResponseDto updateStop(Long routeId, Long stopId, StopRequestDto dto);
+
+     void deleteStop(Long routeId, Long stopId);
 }

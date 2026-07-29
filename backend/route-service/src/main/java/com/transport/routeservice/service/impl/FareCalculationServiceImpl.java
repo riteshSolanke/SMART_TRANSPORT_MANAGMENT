@@ -14,7 +14,7 @@
 
         public BigDecimal calculateFare(BigDecimal distanceKm, boolean isPeakHour) {
             if (distanceKm == null || distanceKm.compareTo(BigDecimal.ZERO) < 0) {
-                distanceKm = BigDecimal.ZERO;
+                throw new IllegalArgumentException("Distance cannot be negative");
             }
             BigDecimal fare = BASE_FARE.add(distanceKm.multiply(PER_KM_RATE));
             if (isPeakHour) {

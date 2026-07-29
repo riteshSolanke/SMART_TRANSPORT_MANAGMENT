@@ -1,7 +1,8 @@
 #spring.application.name=TRANSPORT_SYS_PROJECT
 
 server:
-  port: 8761
+  port: ${EUREKA_PORT:8761}
+  address: ${SERVICE_BIND_ADDRESS:127.0.0.1}
 
 spring:
   application:
@@ -9,7 +10,7 @@ spring:
 
 eureka:
   instance:
-    hostname: localhost
+    hostname: ${EUREKA_HOSTNAME:localhost}
 
   client:
   # Eureka server cannot register itself as client
@@ -21,13 +22,12 @@ eureka:
 
   server:
     #Wait time before removing a dead service (in ms)
-    eviction-interval-timer-in-ms: 10000
-    enable-self-preservation: false
+    eviction-interval-timer-in-ms: ${EUREKA_EVICTION_INTERVAL_MS:10000}
+    enable-self-preservation: ${EUREKA_SELF_PRESERVATION:true}
 
 
 #Logging
 logging:
   level:
     com.netflix.eureka: INFO
-    com.netflix.descovery: INFO
-
+    com.netflix.discovery: INFO

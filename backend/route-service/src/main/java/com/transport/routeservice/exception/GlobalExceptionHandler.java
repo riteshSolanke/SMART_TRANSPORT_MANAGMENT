@@ -53,6 +53,12 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), request);
     }
 
+    @ExceptionHandler(DuplicateScheduleException.class)
+    public ResponseEntity<ApiErrorResponse> handleDuplicateSchedule(
+            DuplicateScheduleException ex, HttpServletRequest request) {
+        return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), request);
+    }
+
     @ExceptionHandler(InvalidRouteSearchException.class)
     public ResponseEntity<ApiErrorResponse> handleInvalidRouteSearch(
             InvalidRouteSearchException ex, HttpServletRequest request) {

@@ -16,8 +16,13 @@ public class SecurityConfig {
 
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
+                .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
                 .authorizeExchange(exchange ->
-                        exchange.anyExchange().permitAll()
+                        exchange
+                                .pathMatchers("/actuator/health", "/actuator/info").permitAll()
+                                .pathMatchers("/api/**").permitAll()
+                                .anyExchange().denyAll()
                 )
                 .build();
     }

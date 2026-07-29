@@ -12,6 +12,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Configuration
 @EnableWebSecurity
@@ -30,10 +31,16 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth.requestMatchers("/actuator/**")
+                .authorizeHttpRequests(auth -> auth.requestMatchers("/actuator/health", "/actuator/info")
                         .permitAll()
                         .anyRequest().authenticated()
-                 ).addFilterBefore(internalValidationFilter, UsernamePasswordAuthenticationFilter.class)
+                 )
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint((request, response, exception) ->
+                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED))
+                        .accessDeniedHandler((request, response, exception) ->
+                                response.sendError(HttpServletResponse.SC_FORBIDDEN)))
+                .addFilterBefore(internalValidationFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterAfter(headerAuthenticationFilter, InternalValidationFilter.class);
 
         return http.build();

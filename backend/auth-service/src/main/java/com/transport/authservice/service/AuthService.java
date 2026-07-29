@@ -14,13 +14,20 @@ import com.transport.authservice.exception.InvalidTokenException;
 import com.transport.authservice.exception.ResourceNotFoundException;
 import com.transport.authservice.repository.RefreshTokenRepository;
 import com.transport.authservice.repository.UserRepository;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Base64;
 import java.util.List;
 
 @Service
@@ -42,8 +49,10 @@ public class AuthService {
 
         RefreshToken tokenEntity = RefreshToken.builder()
                 .userId(user.getUserId())
-                .token(refreshToken)
-                .expiresAt(LocalDateTime.now().plusDays(7))
+                .token(hashToken(refreshToken))
+                .expiresAt(LocalDateTime.ofInstant(
+                        jwtService.extractClaims(refreshToken).getExpiration().toInstant(),
+                        ZoneId.systemDefault()))
                 .build();
         refreshTokenRepository.save(tokenEntity);
 
@@ -158,6 +167,9 @@ public class AuthService {
 
         User user = userRepository.findByMobileNumber(mobileNumber)
                 .orElseThrow(()-> new ResourceNotFoundException("user.not-found"));
+        if (!user.isActive()) {
+            throw new ResourceNotFoundException("account.deactivated");
+        }
         log.info("User logged in via OTP: userId = {}", user.getUserId());
         return generateAuthResponse(user);
     }
@@ -189,13 +201,21 @@ public class AuthService {
 //    ================= Forgot password (OTP-based) ===============
 
     public void sendForgotPasswordOtp(String mobileNumber){
-        userRepository.findByMobileNumber(mobileNumber)
+        User user = userRepository.findByMobileNumber(mobileNumber)
                 .orElseThrow(()-> new ResourceNotFoundException("mobile.not.found"));
+        if (!user.isActive()) {
+            throw new ResourceNotFoundException("account.deactivated");
+        }
         otpService.generateAndSendOtp(mobileNumber, OtpPurpose.RESET_PASSWORD);
     }
 
 
  public String verifyForgotPasswordOtp(String mobileNumber, String otp){
+        User user = userRepository.findByMobileNumber(mobileNumber)
+                .orElseThrow(()-> new ResourceNotFoundException("mobile.not.found"));
+        if (!user.isActive()) {
+            throw new ResourceNotFoundException("account.deactivated");
+        }
         otpService.verifyOtp(mobileNumber, otp, OtpPurpose.RESET_PASSWORD);
         return jwtService.generateResetToken(mobileNumber);
  }
@@ -206,6 +226,9 @@ public class AuthService {
 
         User user = userRepository.findByMobileNumber(mobileNumber)
                 .orElseThrow(() -> new ResourceNotFoundException("user.not-found"));
+        if (!user.isActive()) {
+            throw new ResourceNotFoundException("account.deactivated");
+        }
 
         user.setPasswordHash(passwordEncoder.encode(dto.getNewPassword()));
 
@@ -220,22 +243,38 @@ public class AuthService {
 
     @Transactional
     public AuthResponseDto refreshAccessToken(String refreshToken){
-        RefreshToken storedToken = refreshTokenRepository.findByTokenAndRevokedFalse(refreshToken)
+        Claims claims;
+        try {
+            claims = jwtService.extractClaims(refreshToken);
+        } catch (JwtException | IllegalArgumentException exception) {
+            throw new InvalidTokenException("token.refresh.invalid");
+        }
+
+        if (!"REFRESH".equals(claims.get("type", String.class))) {
+            throw new InvalidTokenException("token.refresh.invalid");
+        }
+
+        RefreshToken storedToken = refreshTokenRepository
+                .findByTokenAndRevokedFalse(hashToken(refreshToken))
                 .orElseThrow(()-> new InvalidTokenException("token.refresh.invalid"));
 
         if(storedToken.getExpiresAt().isBefore(LocalDateTime.now())){
+            refreshTokenRepository.delete(storedToken);
             throw new InvalidTokenException("token.refresh.expire");
         }
+        if (!String.valueOf(storedToken.getUserId()).equals(claims.getSubject())) {
+            throw new InvalidTokenException("token.refresh.invalid");
+        }
+
         User user = userRepository.findById(storedToken.getUserId())
                 .orElseThrow(()-> new ResourceNotFoundException("user.not-found"));
+        if (!user.isActive()) {
+            refreshTokenRepository.deleteByUserId(user.getUserId());
+            throw new ResourceNotFoundException("account.deactivated");
+        }
 
-        String newAccessToken = jwtService.generateAccessToken(user);
-        return AuthResponseDto.builder()
-                .accessToken(newAccessToken)
-                .refreshToken(refreshToken)
-                .tokenType("Bearer")
-                .user(toUserResponseDto(user))
-                .build();
+        refreshTokenRepository.delete(storedToken);
+        return generateAuthResponse(user);
 
     }
 
@@ -364,6 +403,7 @@ public class AuthService {
 
         user.setRole(newRole);
         userRepository.save(user);
+        refreshTokenRepository.deleteByUserId(targetUserId);
         log.info("Role updated for userId={} to {}", targetUserId, newRole);
         return toUserResponseDto(user);
     }
@@ -382,6 +422,16 @@ public class AuthService {
 
         log.info("Status updated for userId={} to active={}", targetUserId, active);
         return toUserResponseDto(user);
+    }
+
+    private String hashToken(String token) {
+        try {
+            byte[] digest = MessageDigest.getInstance("SHA-256")
+                    .digest(token.getBytes(StandardCharsets.UTF_8));
+            return Base64.getUrlEncoder().withoutPadding().encodeToString(digest);
+        } catch (NoSuchAlgorithmException exception) {
+            throw new IllegalStateException("SHA-256 is not available", exception);
+        }
     }
 
 }

@@ -2,7 +2,8 @@
 
 #Application constants
 server:
-  port: 9090
+  port: ${API_GATEWAY_PORT:9090}
+  address: ${API_GATEWAY_BIND_ADDRESS:127.0.0.1}
   error:
     include-stacktrace: never
     include-message: never
@@ -11,29 +12,53 @@ management:
   endpoints:
     web:
       exposure:
-        include: "*"
+        include: health,info
 
   endpoint:
     health:
-      show-details: always
+      show-details: never
 
 
 jwt:
-  secret: mySuperSecretKeyForJwtGeneration12345678901234567890
+  secret: ${JWT_SECRET}
 
 
 spring:
   application:
     name: api-gateway
 
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDetailsServiceAutoConfiguration
+
   cloud:
     gateway:
-      discovery:
-        locator:
-          enabled: false
-
       server:
         webflux:
+          discovery:
+            locator:
+              enabled: false
+          globalcors:
+            add-to-simple-url-handler-mapping: true
+            cors-configurations:
+              '[/**]':
+                allowedOriginPatterns: ${CORS_ALLOWED_ORIGIN_PATTERNS:http://localhost:5173,http://localhost:3000}
+                allowedMethods:
+                  - GET
+                  - POST
+                  - DELETE
+                  - PUT
+                  - OPTIONS
+                  - PATCH
+                allowedHeaders:
+                  - Authorization
+                  - Content-Type
+                  - Accept-Language
+                  - X-Correlation-Id
+                exposedHeaders:
+                  - X-Correlation-Id
+                allowCredentials: true
+                maxAge: 3600
           routes:
 
             - id: auth-service
@@ -70,26 +95,10 @@ spring:
                 - name: JwtAuthFilter
 
 
-# Global Cors Config
-
-globalcors:
-  cors-configurations:
-    '[/**]':
-      allowedOrigins: "http://localhost:5373"
-      allowedMethods:
-        - GET
-        - POST
-        - DELETE
-        - PUT
-        - OPTIONS
-        - PATCH
-      allowedHeaders: "*"
-
-
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
   instance:
     hostname: localhost
     prefer-ip-address: true
@@ -102,8 +111,8 @@ eureka:
 logging:
   level:
     root: INFO
-    com.transport.gateway: DEBUG
-    org.springframework.cloud.gateway: DEBUG
+    com.transport.apigateway: INFO
+    org.springframework.cloud.gateway: INFO
 
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} -%msg%n"
@@ -111,4 +120,4 @@ logging:
 
 
 gateway:
-  secret-key: transport-gateway
+  secret-key: ${GATEWAY_SHARED_SECRET}

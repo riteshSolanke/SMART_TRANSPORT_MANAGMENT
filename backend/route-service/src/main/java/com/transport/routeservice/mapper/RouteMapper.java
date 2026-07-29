@@ -7,6 +7,7 @@ import com.transport.routeservice.entity.Route;
 import com.transport.routeservice.entity.Schedule;
 import com.transport.routeservice.entity.Stop;
 import java.util.List;
+import java.util.Comparator;
 import java.util.stream.Collectors;
 
 
@@ -35,9 +36,16 @@ public class RouteMapper {
 
     public static RouteResponseDto toRouteDto(Route route) {
         List<StopResponseDto> stopDtos = route.getStops() == null ? List.of() :
-                route.getStops().stream().map(RouteMapper::toStopDto).collect(Collectors.toList());
+                route.getStops().stream()
+                        .sorted(Comparator.comparing(Stop::getSequenceOrder))
+                        .map(RouteMapper::toStopDto)
+                        .collect(Collectors.toList());
         List<ScheduleResponseDto> scheduleDtos = route.getSchedules() == null ? List.of() :
-                route.getSchedules().stream().map(RouteMapper::toScheduleDto).collect(Collectors.toList());
+                route.getSchedules().stream()
+                        .filter(Schedule::isActive)
+                        .sorted(Comparator.comparing(Schedule::getDepartureTime))
+                        .map(RouteMapper::toScheduleDto)
+                        .collect(Collectors.toList());
 
         return RouteResponseDto.builder()
                 .routeId(route.getRouteId())

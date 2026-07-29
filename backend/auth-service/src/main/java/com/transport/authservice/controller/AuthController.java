@@ -103,7 +103,7 @@ public class AuthController {
 // ======================= FORGOT PASSWORD ===============
 
     @PostMapping("/forgot-password/send-otp")
-    public ResponseEntity<ApiResponseDto<Void>> sendForgotPasswordOtp(@Valid @RequestBody VerifyOtpRequestDto dto){
+    public ResponseEntity<ApiResponseDto<Void>> sendForgotPasswordOtp(@Valid @RequestBody SendOtpRequestDto dto){
        authService.sendForgotPasswordOtp(dto.getMobileNumber());
        return ResponseEntity.ok(ApiResponseDto.success(messageUtil.getMessage("otp.sent.success")));
     }
@@ -130,7 +130,6 @@ public class AuthController {
 
     @PostMapping("/refresh")
     public ResponseEntity<ApiResponseDto<AuthResponseDto>> refreshToken(@Valid @RequestBody RefreshTokenRequestDto dto){
-        System.out.println("RefreshToken:- " + dto.getRefreshToken());
         AuthResponseDto response = authService.refreshAccessToken(dto.getRefreshToken());
 
         return ResponseEntity.ok(ApiResponseDto.success(messageUtil.getMessage("token.refresh"), response));

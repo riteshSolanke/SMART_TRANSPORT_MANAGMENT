@@ -2,43 +2,61 @@ package com.transport.apigateway.filter;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import io.jsonwebtoken.security.SignatureException;
 import lombok.extern.slf4j.Slf4j;
-
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
+import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Mono;
 
-import org.springframework.core.io.buffer.DataBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
+
 import com.transport.apigateway.dto.ErrorResponseDto;
-import org.springframework.beans.factory.annotation.Value;
-import reactor.core.publisher.Mono;
 
 
 @Slf4j
 @Component
 public class JwtAuthFilter extends AbstractGatewayFilterFactory<JwtAuthFilter.Config>{
 
-    @Value("${jwt.secret}")
-    private String secret;
+    static final String USER_ID_HEADER = "X-User-Id";
+    static final String USER_ROLE_HEADER = "X-User-Role";
+    static final String GATEWAY_KEY_HEADER = "X-Gateway-Key";
+    private static final Set<String> ALLOWED_ROLES = Set.of(
+            "PASSENGER", "CONDUCTOR", "DISPATCHER", "TRANSPORT_MANAGER", "ADMIN");
 
-    @Value("${gateway.secret-key}")
-    private String gatewaySecret;
+    private final String secret;
+    private final String gatewaySecret;
+    private final ObjectMapper objectMapper;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
-
-    public JwtAuthFilter(){
+    public JwtAuthFilter(
+            ObjectMapper objectMapper,
+            @Value("${jwt.secret}") String secret,
+            @Value("${gateway.secret-key}") String gatewaySecret) {
         super(Config.class);
+        if (secret == null || secret.getBytes(StandardCharsets.UTF_8).length < 32) {
+            throw new IllegalStateException("JWT_SECRET must contain at least 32 bytes");
+        }
+        if (gatewaySecret == null || gatewaySecret.length() < 32) {
+            throw new IllegalStateException("GATEWAY_SHARED_SECRET must contain at least 32 characters");
+        }
+        this.objectMapper = objectMapper;
+        this.secret = secret;
+        this.gatewaySecret = gatewaySecret;
     }
 
     @Override
@@ -46,15 +64,22 @@ public class JwtAuthFilter extends AbstractGatewayFilterFactory<JwtAuthFilter.Co
         return (exchange, chain) ->{
             String path = exchange.getRequest().getURI().getPath();
 
+            if (HttpMethod.OPTIONS.equals(exchange.getRequest().getMethod())) {
+                return chain.filter(removeTrustedHeaders(exchange));
+            }
+
             List<String> authHeaders = exchange.getRequest().getHeaders().get("Authorization");
 
-            if(authHeaders == null || authHeaders.isEmpty()){
-                log.warn("Request to {} rejcted - missing Authorization header", path);
-
+            if (authHeaders == null || authHeaders.size() != 1) {
+                log.warn("Request to {} rejected - missing or ambiguous Authorization header", path);
                 return onError(exchange,  "Missing authentication token", HttpStatus.UNAUTHORIZED);
             }
 
-            String token = authHeaders.get(0).replace("Bearer ", "").trim();
+            String authHeader = authHeaders.get(0);
+            if (!authHeader.startsWith("Bearer ") || authHeader.length() == 7) {
+                return onError(exchange, "Invalid authentication scheme", HttpStatus.UNAUTHORIZED);
+            }
+            String token = authHeader.substring(7).trim();
 
             try{
                 Claims claims = Jwts.parserBuilder()
@@ -65,14 +90,25 @@ public class JwtAuthFilter extends AbstractGatewayFilterFactory<JwtAuthFilter.Co
 
                 String userId = claims.getSubject();
                 String role = claims.get("role", String.class);
+                String tokenType = claims.get("type", String.class);
 
-                log.info("Authenticated request to {} - userId={}, role={}", path, userId, role);
+                if (!"ACCESS".equals(tokenType)) {
+                    return onError(exchange, "Only access tokens can be used for API requests",
+                            HttpStatus.UNAUTHORIZED);
+                }
+                if (userId == null || userId.isBlank() || role == null || !ALLOWED_ROLES.contains(role)) {
+                    return onError(exchange, "Token is missing required identity claims",
+                            HttpStatus.UNAUTHORIZED);
+                }
 
                 ServerWebExchange mutatedExchange = exchange.mutate()
                         .request(r -> r.headers(headers -> {
-                            headers.add("X-User-Id", userId);
-                            headers.add("X-User-Role", role);
-                            headers.add("X-Gateway-Key", gatewaySecret);
+                            headers.remove(USER_ID_HEADER);
+                            headers.remove(USER_ROLE_HEADER);
+                            headers.remove(GATEWAY_KEY_HEADER);
+                            headers.set(USER_ID_HEADER, userId);
+                            headers.set(USER_ROLE_HEADER, role);
+                            headers.set(GATEWAY_KEY_HEADER, gatewaySecret);
                         })).build();
 
                 return chain.filter(mutatedExchange);
@@ -87,88 +123,49 @@ public class JwtAuthFilter extends AbstractGatewayFilterFactory<JwtAuthFilter.Co
                         HttpStatus.UNAUTHORIZED);
             }
 
-            catch (SignatureException e) {
-
-                log.warn("Invalid JWT Signature");
-
-                return onError(
-                        exchange,
-                        "Invalid token signature.",
-                        HttpStatus.UNAUTHORIZED);
-            }
-
-            catch (MalformedJwtException e) {
-
-                log.warn("Malformed JWT");
-
-                return onError(
-                        exchange,
-                        "Malformed token.",
-                        HttpStatus.UNAUTHORIZED);
-            }
-
-            catch (UnsupportedJwtException e) {
-
-                log.warn("Unsupported JWT");
-
-                return onError(
-                        exchange,
-                        "Unsupported token.",
-                        HttpStatus.UNAUTHORIZED);
+            catch (JwtException | IllegalArgumentException e) {
+                log.warn("JWT validation failed for path {}: {}", path, e.getClass().getSimpleName());
+                return onError(exchange, "Invalid authentication token", HttpStatus.UNAUTHORIZED);
             }
 
             catch (Exception e) {
-
-                log.warn("JWT Validation Failed");
-
-                return onError(
-                        exchange,
-                        "Authentication failed.",
-                        HttpStatus.UNAUTHORIZED);
+                log.error("Unexpected authentication failure for path {}", path, e);
+                return onError(exchange, "Authentication failed", HttpStatus.UNAUTHORIZED);
             }
 
         };
     }
 
+    private ServerWebExchange removeTrustedHeaders(ServerWebExchange exchange) {
+        return exchange.mutate()
+                .request(request -> request.headers(headers -> {
+                    headers.remove(USER_ID_HEADER);
+                    headers.remove(USER_ROLE_HEADER);
+                    headers.remove(GATEWAY_KEY_HEADER);
+                }))
+                .build();
+    }
 
     private Key getSigningKey(){
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
 
-    private reactor.core.publisher.Mono<Void> onError(ServerWebExchange exchange, String message, HttpStatus status){
-
-        log.info("Inside onError()");
-        log.info("Message: {}", message);
+    private Mono<Void> onError(ServerWebExchange exchange, String message, HttpStatusCode status){
         exchange.getResponse().setStatusCode(status);
-        exchange.getResponse().getHeaders().add("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+        exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
 
         ErrorResponseDto errorDto = new ErrorResponseDto(status.value(), message, LocalDateTime.now());
 
         try {
-
-            log.info("Step 1");
-
             byte[] bytes = objectMapper.writeValueAsBytes(errorDto);
-
-            log.info("Step 2");
-
             DataBuffer buffer =
                     exchange.getResponse()
                             .bufferFactory()
                             .wrap(bytes);
-
-            log.info("Step 3");
-
-            return exchange.getResponse()
-                    .writeWith(Mono.just(buffer))
-                    .doOnSuccess(v -> log.info("Step 4 Success"))
-                    .doOnError(err -> log.error("Step 4 Error", err));
-
+            return exchange.getResponse().writeWith(Mono.just(buffer));
         } catch (Exception e) {
-
             log.error("Serialization Error", e);
-
             return exchange.getResponse().setComplete();
         }
     }

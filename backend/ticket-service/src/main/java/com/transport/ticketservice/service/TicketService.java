@@ -8,14 +8,18 @@ import java.util.List;
 
 public interface TicketService {
 
-    TicketResponseDto bookTicket(TicketRequestDto dto);
+    TicketResponseDto bookTicket(
+            TicketRequestDto dto, Long authenticatedUserId, boolean privileged);
 
-    TicketResponseDto getTicketById(Long id);
+    TicketResponseDto getTicketById(
+            Long id, Long authenticatedUserId, boolean privileged);
 
-    TicketResponseDto getTicketByPnr(String pnrNumber);
+    TicketResponseDto getTicketByPnr(
+            String pnrNumber, Long authenticatedUserId, boolean privileged);
 
-    List<TicketResponseDto> getTicketsByUser(Long userId);
+    List<TicketResponseDto> getTicketsByUser(
+            Long userId, Long authenticatedUserId, boolean privileged);
 
-    void cancelTicket(Long id);
+    void cancelTicket(Long id, Long authenticatedUserId, boolean privileged);
 
 }

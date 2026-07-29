@@ -14,6 +14,10 @@ public class RouteSearchResponseDto {
     private String routeName;
     private String startPoint;
     private String endPoint;
+    private Long sourceStopId;
+    private String sourceStopName;
+    private Long destinationStopId;
+    private String destinationStopName;
     private BigDecimal totalDistanceKm;
     private BigDecimal estimatedFare;
     private List<ScheduleResponseDto> availableSchedules;

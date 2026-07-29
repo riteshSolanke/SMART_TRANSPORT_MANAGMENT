@@ -1,45 +1,50 @@
 server:
-  port: 9093
+  port: ${TICKET_SERVICE_PORT:9093}
+  address: ${SERVICE_BIND_ADDRESS:127.0.0.1}
 
 gateway:
-  secret-key: transport-gateway
+  secret-key: ${GATEWAY_SHARED_SECRET}
 
 spring:
   application:
     name: ticket-service
   datasource:
-    url: jdbc:mysql://localhost:3306/ticket_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
-    username: root
-    password: root
+    url: ${TICKET_DB_URL:jdbc:mysql://localhost:3306/ticket_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC}
+    username: ${TICKET_DB_USERNAME}
+    password: ${TICKET_DB_PASSWORD}
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: ${JPA_DDL_AUTO:validate}
+    show-sql: ${JPA_SHOW_SQL:false}
     properties:
       hibernate:
         format_sql: true
+  flyway:
+    enabled: ${FLYWAY_ENABLED:true}
+    baseline-on-migrate: true
+    baseline-version: 0
   messages:
     basename: messages
     encoding: UTF-8
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: true
+      client:
+        config:
+          default:
+            connectTimeout: ${FEIGN_CONNECT_TIMEOUT_MS:3000}
+            readTimeout: ${FEIGN_READ_TIMEOUT_MS:5000}
+            loggerLevel: basic
 
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
   instance:
     hostname: localhost
     prefer-ip-address: true
 
-
-feign:
-  circuitbreaker:
-    enabled: true
-  client:
-    config:
-      default:
-        connectTimeout: 5000
-        readTimeout: 5000
-        loggerLevel: full
 
 resilience4j:
   circuitbreaker:
@@ -59,10 +64,10 @@ management:
         include: health,info,circuitbreakers
   endpoint:
     health:
-      show-details: always
+      show-details: never
 
 
 logging:
   level:
-    com.transport.ticketservice.client: DEBUG
-    feign: DEBUG
+    com.transport.ticketservice.client: INFO
+    feign: INFO

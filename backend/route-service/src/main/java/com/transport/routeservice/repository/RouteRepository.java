@@ -23,11 +23,20 @@ public interface RouteRepository extends JpaRepository<Route, Long> {
 
     boolean existsByRouteNameIgnoreCase(String routeName);
 
-    @Query("SELECT r FROM Route r WHERE r.active = true " +
-
-            "AND LOWER(r.startPoint) = LOWER(:from) AND LOWER(r.endPoint) = LOWER(:to)")
-
-    List<Route> findDirectRoutes(@Param("from") String from, @Param("to") String to);
+    @Query("""
+            SELECT DISTINCT r
+            FROM Route r
+            JOIN r.stops source
+            JOIN r.stops destination
+            WHERE r.active = true
+              AND LOWER(TRIM(source.stopName)) = LOWER(:from)
+              AND LOWER(TRIM(destination.stopName)) = LOWER(:to)
+              AND source.sequenceOrder < destination.sequenceOrder
+            ORDER BY r.routeName
+            """)
+    List<Route> findRoutesServingStopsInOrder(
+            @Param("from") String from,
+            @Param("to") String to);
 
 
 

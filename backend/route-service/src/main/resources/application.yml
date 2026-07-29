@@ -1,31 +1,45 @@
 server:
-  port: 9092
+  port: ${ROUTE_SERVICE_PORT:9092}
+  address: ${SERVICE_BIND_ADDRESS:127.0.0.1}
 
 spring:
   application:
     name: route-service
 
   datasource:
-    url: jdbc:mysql://localhost:3306/route_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
-    username: root
-    password: root
+    url: ${ROUTE_DB_URL:jdbc:mysql://localhost:3306/route_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC}
+    username: ${ROUTE_DB_USERNAME}
+    password: ${ROUTE_DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: ${JPA_DDL_AUTO:validate}
+    show-sql: ${JPA_SHOW_SQL:false}
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
+  flyway:
+    enabled: ${FLYWAY_ENABLED:true}
+    baseline-on-migrate: true
+    baseline-version: 0
 
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
   instance:
     hostname: localhost
     prefer-ip-address: true
 
 gateway:
-  secret-key: transport-gateway
+  secret-key: ${GATEWAY_SHARED_SECRET}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never

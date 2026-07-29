@@ -11,4 +11,11 @@ public interface ScheduleService {
 
     List<ScheduleResponseDto> getSchedulesByRoute(Long routeId);
 
+    ScheduleResponseDto getSchedule(Long routeId, Long scheduleId);
+
+    ScheduleResponseDto updateSchedule(
+            Long routeId, Long scheduleId, ScheduleRequestDto dto);
+
+    void deleteSchedule(Long routeId, Long scheduleId);
+
 }

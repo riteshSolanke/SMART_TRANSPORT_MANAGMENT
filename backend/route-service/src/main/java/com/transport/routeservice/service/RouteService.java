@@ -4,6 +4,8 @@ import com.transport.routeservice.dto.request.RouteRequestDto;
 import com.transport.routeservice.dto.response.FareResponseDto;
 import com.transport.routeservice.dto.response.RouteResponseDto;
 import com.transport.routeservice.dto.response.RouteSearchResponseDto;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 
@@ -20,7 +22,12 @@ public interface RouteService {
 
     void deleteRoute(Long routeId);
 
-    List<RouteSearchResponseDto> searchRoutes(String from, String to);
+    List<RouteSearchResponseDto> searchRoutes(String from, String to, LocalDate travelDate);
 
-    FareResponseDto getFare(Long routeId, Long sourceStopId, Long destinationStopId);
+    FareResponseDto getFare(
+            Long routeId,
+            Long sourceStopId,
+            Long destinationStopId,
+            Long scheduleId,
+            LocalTime departureTime);
 }

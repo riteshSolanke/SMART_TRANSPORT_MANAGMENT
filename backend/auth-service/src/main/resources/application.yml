@@ -1,6 +1,7 @@
 #server config
 server:
-  port: 9091
+  port: ${AUTH_SERVICE_PORT:9091}
+  address: ${SERVICE_BIND_ADDRESS:127.0.0.1}
 
 #spring app config
 spring:
@@ -8,16 +9,16 @@ spring:
      name: auth-service
 
    datasource:
-     url: jdbc:mysql://localhost:3306/transport_auth_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-     username: root
-     password: root
+     url: ${AUTH_DB_URL:jdbc:mysql://localhost:3306/transport_auth_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+     username: ${AUTH_DB_USERNAME}
+     password: ${AUTH_DB_PASSWORD}
      driver-class-name: com.mysql.cj.jdbc.Driver
 
    jpa:
      hibernate:
-       ddl-auto: update
+       ddl-auto: ${JPA_DDL_AUTO:validate}
 
-     show-sql: true
+     show-sql: ${JPA_SHOW_SQL:false}
 
      properties:
        hibernate:
@@ -25,26 +26,32 @@ spring:
 
      database-platform: org.hibernate.dialect.MySQLDialect
 
+   flyway:
+     enabled: ${FLYWAY_ENABLED:true}
+     baseline-on-migrate: true
+     baseline-version: 0
+
 
 
 # Jwt config
 jwt:
-  secret: mySuperSecretKeyForJwtGeneration12345678901234567890
-  access-token-expiry: 900000   #15 min in ms
-  refresh-token-expiry: 604800000 #7 days in ms
+  secret: ${JWT_SECRET}
+  access-token-expiry: ${JWT_ACCESS_TOKEN_EXPIRY_MS:900000}
+  refresh-token-expiry: ${JWT_REFRESH_TOKEN_EXPIRY_MS:604800000}
 
 
 #otp config
 otp:
-  expiry-minutes: 5
-  max-attempts: 3
+  expiry-minutes: ${OTP_EXPIRY_MINUTES:5}
+  max-attempts: ${OTP_MAX_ATTEMPTS:3}
+  resend-cooldown-seconds: ${OTP_RESEND_COOLDOWN_SECONDS:60}
 
 
 #eureka config
 eureka:
   client:
     service-url:
-     defaultZone: http://localhost:8761/eureka/
+     defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
   instance:
     hostname: localhost
     prefer-ip-address: true
@@ -54,8 +61,8 @@ eureka:
 logging:
   level:
     root: INFO
-    com.transport.auth: DEBUG
-    org.springframework.security: DEBUG
+    com.transport.authservice: INFO
+    org.springframework.security: INFO
 
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger {36} - %msg%n"
@@ -63,25 +70,17 @@ logging:
 
 #App config
 app:
-  environment: dev
+  environment: ${APP_ENVIRONMENT:dev}
   sms:
-    mode: console
+    mode: ${SMS_MODE:console}
+  otp:
+    expose-in-logs: ${EXPOSE_OTP_IN_LOGS:false}
 
-gateway:
-  secret-key: transport-gateway
-
-
-## msg91 services Config
-#msg91:
-#  auth-key: 548558AofrGGQntZ6a4e388bP1
-#  template-id: your_temp_id
-#  base-url: https://control.msg91.com/api/v5/otp
-#  otp-expiry-minutes: 5
-
-
-
-
-
-
-
-
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never

@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -19,42 +20,62 @@ public class TicketController {
     private final TicketService ticketService;
 
 
-    @GetMapping("/test")
-    public String test(){
-        return "Tested Successfully";
-    }
-
-
     @PostMapping
     @PreAuthorize("hasAnyRole('PASSENGER','ADMIN')")
     @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponseDto<TicketResponseDto> bookTicket(@Valid @RequestBody TicketRequestDto dto) {
-        return ApiResponseDto.success("Ticket booked successfully", ticketService.bookTicket(dto));
+    public ApiResponseDto<TicketResponseDto> bookTicket(
+            Authentication authentication,
+            @Valid @RequestBody TicketRequestDto dto) {
+        return ApiResponseDto.success(
+                "Ticket booked successfully",
+                ticketService.bookTicket(dto, userId(authentication), isPrivileged(authentication)));
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('PASSENGER','ADMIN','TRANSPORT_MANAGER')")
-    public ApiResponseDto<TicketResponseDto> getTicketById(@PathVariable Long id) {
-        return ApiResponseDto.success(ticketService.getTicketById(id));
+    public ApiResponseDto<TicketResponseDto> getTicketById(
+            Authentication authentication,
+            @PathVariable Long id) {
+        return ApiResponseDto.success(ticketService.getTicketById(
+                id, userId(authentication), isPrivileged(authentication)));
     }
 
     @GetMapping("/pnr/{pnrNumber}")
     @PreAuthorize("hasAnyRole('PASSENGER','ADMIN','TRANSPORT_MANAGER')")
-    public ApiResponseDto<TicketResponseDto> getTicketByPnr(@PathVariable String pnrNumber) {
-        return ApiResponseDto.success(ticketService.getTicketByPnr(pnrNumber));
+    public ApiResponseDto<TicketResponseDto> getTicketByPnr(
+            Authentication authentication,
+            @PathVariable String pnrNumber) {
+        return ApiResponseDto.success(ticketService.getTicketByPnr(
+                pnrNumber, userId(authentication), isPrivileged(authentication)));
     }
 
     @GetMapping("/user/{userId}")
-    @PreAuthorize("hasAnyRole('PASSENGER','ADMIN')")
-    public ApiResponseDto<List<TicketResponseDto>> getTicketsByUser(@PathVariable Long userId) {
-        return ApiResponseDto.success(ticketService.getTicketsByUser(userId));
+    @PreAuthorize("hasAnyRole('PASSENGER','ADMIN','TRANSPORT_MANAGER')")
+    public ApiResponseDto<List<TicketResponseDto>> getTicketsByUser(
+            Authentication authentication,
+            @PathVariable Long userId) {
+        return ApiResponseDto.success(ticketService.getTicketsByUser(
+                userId, userId(authentication), isPrivileged(authentication)));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('PASSENGER','ADMIN')")
-    public ApiResponseDto<String> cancelTicket(@PathVariable Long id) {
-        ticketService.cancelTicket(id);
+    public ApiResponseDto<String> cancelTicket(
+            Authentication authentication,
+            @PathVariable Long id) {
+        ticketService.cancelTicket(id, userId(authentication), isPrivileged(authentication));
         return ApiResponseDto.success("Ticket cancelled successfully", "OK");
+    }
+
+    private Long userId(Authentication authentication) {
+        return Long.parseLong(authentication.getName());
+    }
+
+    private boolean isPrivileged(Authentication authentication) {
+        return authentication.getAuthorities().stream()
+                .map(authority -> authority.getAuthority())
+                .anyMatch(authority -> authority.equals("ROLE_ADMIN")
+                        || authority.equals("ROLE_TRANSPORT_MANAGER"));
     }
 
 }

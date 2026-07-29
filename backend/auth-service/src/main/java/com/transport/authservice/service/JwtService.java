@@ -18,14 +18,25 @@ import java.util.Date;
 @Service
 public class JwtService {
 
-    @Value("${jwt.secret}")
-    private String secret;
+    private final String secret;
+    private final long accessTokenExpiry;
+    private final long refreshTokenExpiry;
 
-    @Value("${jwt.access-token-expiry}")
-    private long accessTokenExpiry;
-
-    @Value("${jwt.refresh-token-expiry}")
-    private long refreshTokenExpiry;
+    public JwtService(
+            @Value("${jwt.secret}") String secret,
+            @Value("${jwt.access-token-expiry}") long accessTokenExpiry,
+            @Value("${jwt.refresh-token-expiry}") long refreshTokenExpiry) {
+        if (secret == null || secret.getBytes(StandardCharsets.UTF_8).length < 32) {
+            throw new IllegalStateException("JWT_SECRET must contain at least 32 bytes");
+        }
+        if (accessTokenExpiry <= 0 || refreshTokenExpiry <= accessTokenExpiry) {
+            throw new IllegalStateException(
+                    "JWT expiry values must be positive and refresh expiry must exceed access expiry");
+        }
+        this.secret = secret;
+        this.accessTokenExpiry = accessTokenExpiry;
+        this.refreshTokenExpiry = refreshTokenExpiry;
+    }
 
 
     private Key getSigningKey(){
@@ -112,10 +123,9 @@ public class JwtService {
             extractClaims(token);
             return true;
         }catch(Exception e){
-            log.warn("Invalid or expired token: {}", e.getMessage());
+            log.warn("Invalid or expired token: {}", e.getClass().getSimpleName());
             return false;
         }
     }
-
 
 }

@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.web.WebProperties;
 import org.springframework.boot.autoconfigure.web.reactive.error.AbstractErrorWebExceptionHandler;
 import org.springframework.boot.web.reactive.error.ErrorAttributes;
+import org.springframework.boot.web.error.ErrorAttributeOptions;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
@@ -15,7 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.*;
 import reactor.core.publisher.Mono;
 
-import java.net.ConnectException;
+import java.util.Map;
 
 @Component
 @Order(-2)
@@ -46,20 +47,31 @@ public class GlobalExceptionHandler extends AbstractErrorWebExceptionHandler {
 
     private Mono<ServerResponse> handleError(ServerRequest request) {
 
-        Throwable ex = getError(request);
-
-        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
-        String message = "Something went wrong";
-
-        if (ex instanceof ConnectException ||
-                (ex.getMessage() != null
-                        && ex.getMessage().contains("Connection timed out"))) {
-
-            status = HttpStatus.SERVICE_UNAVAILABLE;
-            message = "Target service is unavailable";
+        Throwable exception = getError(request);
+        Map<String, Object> attributes =
+                getErrorAttributes(request, ErrorAttributeOptions.defaults());
+        int statusCode = (int) attributes.getOrDefault(
+                "status", HttpStatus.INTERNAL_SERVER_ERROR.value());
+        HttpStatus status = HttpStatus.resolve(statusCode);
+        if (status == null) {
+            status = HttpStatus.INTERNAL_SERVER_ERROR;
         }
 
-        log.error("Gateway Exception", ex);
+        String message = switch (status) {
+            case NOT_FOUND -> "Requested endpoint was not found";
+            case SERVICE_UNAVAILABLE, BAD_GATEWAY, GATEWAY_TIMEOUT ->
+                    "Target service is unavailable";
+            default -> status.is4xxClientError()
+                    ? "Request could not be processed"
+                    : "Internal server error";
+        };
+
+        if (status.is5xxServerError()) {
+            log.error("Gateway request failed with status {}", status.value(), exception);
+        } else {
+            log.warn("Gateway request failed with status {}: {}",
+                    status.value(), exception.getClass().getSimpleName());
+        }
 
         ErrorResponseDto response = ErrorResponseDto.builder()
                 .status(status.value())

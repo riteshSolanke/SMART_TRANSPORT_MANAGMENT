@@ -80,6 +80,18 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(OtpRateLimitException.class)
+    public ResponseEntity<ErrorResponseDto> handleOtpRateLimit(
+            OtpRateLimitException ex,
+            HttpServletRequest req) {
+        return buildErrorResponse(
+                HttpStatus.TOO_MANY_REQUESTS,
+                messageSource.getMessage(
+                        ex.getMessage(), null,
+                        ex.getMessage(),
+                        LocaleContextHolder.getLocale()));
+    }
+
     @ExceptionHandler(DuplicateResourceException.class)
     public ResponseEntity<ErrorResponseDto> handleDuplicate(DuplicateResourceException ex, HttpServletRequest req){
         String translatedMessage = messageSource.getMessage(

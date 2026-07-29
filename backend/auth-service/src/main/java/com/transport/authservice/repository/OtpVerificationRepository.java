@@ -15,6 +15,9 @@ public interface OtpVerificationRepository extends JpaRepository<OtpVerification
     Optional<OtpVerification>  findTopByIdentifierAndPurposeAndUsedFalseOrderByCreatedAtDesc(
             String identifier, OtpPurpose purpose);
 
+    Optional<OtpVerification> findTopByIdentifierAndPurposeOrderByCreatedAtDesc(
+            String identifier, OtpPurpose purpose);
+
     void deleteByIdentifierAndPurpose(String identifier, OtpPurpose purpose);
 
 }

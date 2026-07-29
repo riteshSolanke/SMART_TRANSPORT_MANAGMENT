@@ -14,6 +14,7 @@ import com.transport.ticketservice.repository.TicketRepository;
 import com.transport.ticketservice.service.TicketService;
 import com.transport.ticketservice.util.TicketNumberGenerator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
@@ -30,7 +31,10 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     @Transactional
-    public TicketResponseDto bookTicket(TicketRequestDto dto) {
+    public TicketResponseDto bookTicket(
+            TicketRequestDto dto, Long authenticatedUserId, boolean privileged) {
+        Long ticketOwnerId = resolveTicketOwner(
+                dto.getUserId(), authenticatedUserId, privileged);
         ApiResponseDto<FareResponseDto> response =
                 routeServiceClient.getFare(
                         dto.getRouteId(),
@@ -43,7 +47,7 @@ public class TicketServiceImpl implements TicketService {
         String pnr = generateUniquePnr();
         Ticket ticket = Ticket.builder()
                 .pnrNumber(pnr)
-                .userId(dto.getUserId())
+                .userId(ticketOwnerId)
                 .routeId(dto.getRouteId())
                 .sourceStopId(dto.getSourceStopId())
                 .destinationStopId(dto.getDestinationStopId())
@@ -59,35 +63,44 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     @Transactional(readOnly = true)
-    public TicketResponseDto getTicketById(Long id) {
+    public TicketResponseDto getTicketById(
+            Long id, Long authenticatedUserId, boolean privileged) {
 
        Ticket ticket = ticketRepository.findById(id)
                 .orElseThrow(() -> new TicketNotFoundException("Ticket not found with id: " + id));
+        verifyTicketAccess(ticket, authenticatedUserId, privileged);
 
         return ticketMapper.toResponseDto(ticket);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public TicketResponseDto getTicketByPnr(String pnrNumber) {
+    public TicketResponseDto getTicketByPnr(
+            String pnrNumber, Long authenticatedUserId, boolean privileged) {
         Ticket ticket = ticketRepository.findByPnrNumber(pnrNumber)
                 .orElseThrow(() -> new TicketNotFoundException("Ticket not found with PNR: " + pnrNumber));
+        verifyTicketAccess(ticket, authenticatedUserId, privileged);
 
         return ticketMapper.toResponseDto(ticket);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<TicketResponseDto> getTicketsByUser(Long userId) {
+    public List<TicketResponseDto> getTicketsByUser(
+            Long userId, Long authenticatedUserId, boolean privileged) {
+        if (!privileged && !userId.equals(authenticatedUserId)) {
+            throw new AccessDeniedException("You can only access your own tickets");
+        }
         List<Ticket> tickets = ticketRepository.findByUserId(userId);
         return ticketMapper.toResponseDtoList(tickets);
     }
 
     @Override
     @Transactional
-    public void cancelTicket(Long id) {
+    public void cancelTicket(Long id, Long authenticatedUserId, boolean privileged) {
         Ticket ticket = ticketRepository.findById(id)
                 .orElseThrow(() -> new TicketNotFoundException("Ticket not found with id: " + id));
+        verifyTicketAccess(ticket, authenticatedUserId, privileged);
         if (ticket.getStatus() == TicketStatus.CANCELLED) {
             throw new InvalidTicketStateException("Ticket is already cancelled");
         }
@@ -107,6 +120,25 @@ public class TicketServiceImpl implements TicketService {
             pnr = ticketNumberGenerator.generate();
         } while (ticketRepository.existsByPnrNumber(pnr));
         return pnr;
+    }
+
+    private Long resolveTicketOwner(
+            Long requestedUserId, Long authenticatedUserId, boolean privileged) {
+        if (requestedUserId == null || requestedUserId.equals(authenticatedUserId)) {
+            return authenticatedUserId;
+        }
+        if (!privileged) {
+            throw new AccessDeniedException(
+                    "Passengers cannot book tickets for another user");
+        }
+        return requestedUserId;
+    }
+
+    private void verifyTicketAccess(
+            Ticket ticket, Long authenticatedUserId, boolean privileged) {
+        if (!privileged && !ticket.getUserId().equals(authenticatedUserId)) {
+            throw new AccessDeniedException("You can only access your own tickets");
+        }
     }
 
 }

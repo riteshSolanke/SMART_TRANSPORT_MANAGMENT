@@ -9,9 +9,12 @@ import com.transport.routeservice.service.RouteService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 @RestController
@@ -38,7 +41,7 @@ public class RouteController {
         return ApiResponseDto.success(routeService.getRouteById(id), LocalDateTime.now());
     }
 
-    @PatchMapping("/{id}")
+    @RequestMapping(value = "/{id}", method = {RequestMethod.PUT, RequestMethod.PATCH})
     @PreAuthorize("hasAnyRole('TRANSPORT_MANAGER','ADMIN')")
     public ApiResponseDto<RouteResponseDto> updateRoute(@PathVariable Long id,
                                                         @Valid @RequestBody RouteRequestDto dto) {
@@ -54,14 +57,25 @@ public class RouteController {
 
     @GetMapping("/search")
     public ApiResponseDto<List<RouteSearchResponseDto>> searchRoutes(@RequestParam String from,
-                                                                     @RequestParam String to) {
-        return ApiResponseDto.success(routeService.searchRoutes(from, to), LocalDateTime.now());
+                                                                     @RequestParam String to,
+                                                                     @RequestParam(required = false)
+                                                                     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                                                                     LocalDate travelDate) {
+        return ApiResponseDto.success(
+                routeService.searchRoutes(from, to, travelDate), LocalDateTime.now());
     }
 
     @GetMapping("/{id}/fare")
     public ApiResponseDto<FareResponseDto> getFare(@PathVariable Long id,
                                                    @RequestParam Long sourceStopId,
-                                                   @RequestParam Long destinationStopId) {
-        return ApiResponseDto.success(routeService.getFare(id, sourceStopId, destinationStopId), LocalDateTime.now());
+                                                   @RequestParam Long destinationStopId,
+                                                   @RequestParam(required = false) Long scheduleId,
+                                                   @RequestParam(required = false)
+                                                   @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
+                                                   LocalTime departureTime) {
+        return ApiResponseDto.success(
+                routeService.getFare(
+                        id, sourceStopId, destinationStopId, scheduleId, departureTime),
+                LocalDateTime.now());
     }
 }

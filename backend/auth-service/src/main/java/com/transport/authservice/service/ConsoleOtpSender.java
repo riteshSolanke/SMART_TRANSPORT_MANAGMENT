@@ -14,16 +14,23 @@ public class ConsoleOtpSender implements OtpSender{
     @Value("${app.sms.mode}")
     private String smsMode;
 
+    @Value("${app.otp.expose-in-logs:false}")
+    private boolean exposeOtpInLogs;
+
     @Override
     public void send(String mobileNumber, String otp){
-        log.info("-------------------------------------------------------");
-        log.info("[DEV MODE - {} ] OTP for {} is: {}",  smsMode.toUpperCase(), mobileNumber, otp );
-        log.info("===========================================================");
+        if (exposeOtpInLogs) {
+            log.warn("[{} MODE] OTP delivery for number ending in {}: {}",
+                    smsMode.toUpperCase(), lastFour(mobileNumber), otp);
+            return;
+        }
+        log.info("[{} MODE] OTP delivery requested for number ending in {}",
+                smsMode.toUpperCase(), lastFour(mobileNumber));
     }
 
-
-
-
-
-
+    private String lastFour(String value) {
+        return value == null || value.length() < 4
+                ? "****"
+                : value.substring(value.length() - 4);
+    }
 }

@@ -16,7 +16,8 @@ import java.time.LocalDateTime;
 @Builder
 public class TicketRequestDto {
 
-    @NotNull(message = "User id is required")
+    // Optional for administrators booking on behalf of another passenger.
+    // Passenger requests are always bound to the authenticated user.
     private Long userId;
 
     @NotNull(message = "Route id is required")

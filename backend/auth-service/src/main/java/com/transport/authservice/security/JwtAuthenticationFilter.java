@@ -32,7 +32,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(@NonNull HttpServletRequest req, @NonNull HttpServletResponse res, @NonNull FilterChain filterChain ) throws ServletException, IOException {
         log.info("REQUEST URI = {}", req.getRequestURI());
         String authHeader = req.getHeader("Authorization");
-        log.info("AUTH HEADER = {}", authHeader);
 
 
 //        No token present - let it pass through; SecurityConfig decides if route needs auth
@@ -49,10 +48,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             String lang = claims.get("lang", String.class);
 
-            System.out.println("Language set: " + lang);
             if(lang != null){
-                req.setAttribute(JwtLocaleResolver.LOCALE_ATTRIBUTE , new Locale(lang)
-                );
+                req.setAttribute(JwtLocaleResolver.LOCALE_ATTRIBUTE, Locale.forLanguageTag(lang));
             }
 
 //            Only Access tokens are valid for general api authentication...
@@ -72,10 +69,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 //            Forward userid downstream - Controllers read this via  @RequestHeader
 
-            req.setAttribute("X-User-Id", userId);
-
         }catch(Exception e){
-            log.warn("Invalid JWT token: {}", e.getMessage());
+            log.warn("Invalid JWT token: {}", e.getClass().getSimpleName());
 //          Don't throw exception here ... security config will reject it
 //            Unauthenticated access to protected routes with 401 automatically
         }

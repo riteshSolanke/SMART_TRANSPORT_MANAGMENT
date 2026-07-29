@@ -1,2 +1,8 @@
 /.metadata/
-/.metadata/
+.env
+*.env
+!.env.example
+**/target/
+**/bin/
+**/.idea/
+*.iml
