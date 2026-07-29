@@ -5,6 +5,7 @@ import com.transport.authservice.dto.request.*;
 import com.transport.authservice.dto.response.ApiResponseDto;
 import com.transport.authservice.dto.response.AuthResponseDto;
 import com.transport.authservice.dto.response.UserResponseDto;
+import com.transport.authservice.exception.InvalidTokenException;
 import com.transport.authservice.service.AuthService;
 import com.transport.authservice.service.JwtService;
 import com.transport.authservice.util.MessageUtil;
@@ -243,7 +244,7 @@ public class AuthController {
         Claims claims = jwtService.extractClaims(token);
         String tokenType = claims.get("type", String.class);
         if(!expectedType.equals(tokenType)){
-            throw new RuntimeException("token.invalid");
+            throw new InvalidTokenException("token.invalid");
         }
        return claims.getSubject();
     }

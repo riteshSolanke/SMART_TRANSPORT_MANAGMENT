@@ -9,6 +9,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -21,11 +23,12 @@ public class ScheduleController {
     @PreAuthorize("hasAnyRole('TRANSPORT_MANAGER','ADMIN')")
     public ApiResponseDto<ScheduleResponseDto> addSchedule(@PathVariable Long routeId,
                                                            @Valid @RequestBody ScheduleRequestDto dto) {
-        return ApiResponseDto.success("Schedule added successfully", scheduleService.addSchedule(routeId, dto));
+        return ApiResponseDto.success("Schedule added successfully", scheduleService.addSchedule(routeId, dto), LocalDateTime.now());
     }
 
     @GetMapping
     public ApiResponseDto<List<ScheduleResponseDto>> getSchedulesByRoute(@PathVariable Long routeId) {
-        return ApiResponseDto.success(scheduleService.getSchedulesByRoute(routeId));
+        return ApiResponseDto.success(scheduleService.getSchedulesByRoute(routeId), LocalDateTime.now());
     }
 }
+

@@ -24,11 +24,12 @@ public class GatewayGlobalExceptionHandler
     public GatewayGlobalExceptionHandler(
             ErrorAttributes errorAttributes,
             ApplicationContext applicationContext,
+
             ServerCodecConfigurer codecConfigurer) {
 
-        super(errorAttributes,
-                new WebProperties.Resources(),
-                applicationContext);
+                            super(errorAttributes,
+                               new WebProperties.Resources(),
+                                applicationContext);
 
         setMessageReaders(codecConfigurer.getReaders());
         setMessageWriters(codecConfigurer.getWriters());

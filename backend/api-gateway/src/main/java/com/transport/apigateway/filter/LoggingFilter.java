@@ -38,3 +38,4 @@ public class LoggingFilter implements GlobalFilter, Ordered {
         return -1;
     }
 }
+

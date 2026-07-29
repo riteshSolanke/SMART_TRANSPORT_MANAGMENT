@@ -25,25 +25,41 @@ public class ScheduleServiceImpl implements ScheduleService {
     private final RouteRepository routeRepository;
 
     @Transactional
-    public ScheduleResponseDto addSchedule(Long routeId, ScheduleRequestDto dto) {
+    public ScheduleResponseDto addSchedule(Long routeId,
+                                           ScheduleRequestDto dto) {
+
         Route route = routeRepository.findById(routeId)
-                .orElseThrow(() -> new RouteNotFoundException(
-                        "Route not found with id: " + routeId));
+                .orElseThrow(() ->
+                        new RouteNotFoundException(
+                                "Route not found with id: " + routeId));
+
+        if(dto.getArrivalTime().isBefore(dto.getDepartureTime())) {
+            throw new IllegalArgumentException(
+                    "Arrival time cannot be before departure time");
+        }
 
         Schedule schedule = new Schedule();
+
         schedule.setRoute(route);
         schedule.setDepartureTime(dto.getDepartureTime());
         schedule.setArrivalTime(dto.getArrivalTime());
         schedule.setDaysOfWeek(dto.getDaysOfWeek());
         schedule.setActive(true);
+
         Schedule saved = scheduleRepository.save(schedule);
+
         return RouteMapper.toScheduleDto(saved);
     }
 
+
+
+
     @Transactional(readOnly = true)
     public List<ScheduleResponseDto> getSchedulesByRoute(Long routeId) {
-        if (!routeRepository.existsById(routeId)) {
-            throw new RouteNotFoundException("Route not found with id: " + routeId);
+
+        if(!routeRepository.existsByRouteIdAndActiveTrue(routeId)) {
+            throw new RouteNotFoundException(
+                    "Route not found with id: " + routeId);
         }
         return scheduleRepository.findByRoute_RouteIdAndActiveTrue(routeId).stream()
                 .map(RouteMapper::toScheduleDto)

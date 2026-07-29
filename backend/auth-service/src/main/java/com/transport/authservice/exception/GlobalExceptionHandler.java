@@ -1,6 +1,7 @@
 package com.transport.authservice.exception;
 
-
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import com.transport.authservice.dto.response.ErrorResponseDto;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -34,7 +35,6 @@ public class GlobalExceptionHandler {
 //    Specific business exception
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponseDto> handleNotFound(ResourceNotFoundException ex, HttpServletRequest req){
-
         String translatedMessage = messageSource.getMessage(
                 ex.getMessage(), null, ex.getMessage(), LocaleContextHolder.getLocale()
         );
@@ -43,6 +43,41 @@ public class GlobalExceptionHandler {
 
         return buildErrorResponse(HttpStatus.NOT_FOUND, translatedMessage);
 
+    }
+
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public ResponseEntity<ErrorResponseDto> handleAccessDenied(
+            AccessDeniedException ex,
+            HttpServletRequest req){
+
+        return buildErrorResponse(
+                HttpStatus.FORBIDDEN,
+                "You do not have permission to access this resource");
+    }
+
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ResponseEntity<ErrorResponseDto> handleAuthorizationDenied(
+            AuthorizationDeniedException ex,
+            HttpServletRequest req){
+
+        return buildErrorResponse(
+                HttpStatus.FORBIDDEN,
+                "You do not have permission to access this resource");
+    }
+
+    @ExceptionHandler(OtpAttemptExceededException.class)
+    public ResponseEntity<ErrorResponseDto> handleOtpAttemptExceeded(
+            OtpAttemptExceededException ex,
+            HttpServletRequest req){
+
+        return buildErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                messageSource.getMessage(
+                        ex.getMessage(), null,
+                        ex.getMessage(),
+                        LocaleContextHolder.getLocale()
+                )
+        );
     }
 
     @ExceptionHandler(DuplicateResourceException.class)

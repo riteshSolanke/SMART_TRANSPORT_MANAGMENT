@@ -1,7 +1,7 @@
-package com.transport.authservice.exception;
+    package com.transport.authservice.exception;
 
-public class InvalidTokenException extends RuntimeException{
-    public InvalidTokenException(String msg){
-        super(msg);
+    public class InvalidTokenException extends RuntimeException{
+        public InvalidTokenException(String msg){
+            super(msg);
+        }
     }
-}

@@ -4,6 +4,7 @@ package com.transport.authservice.service;
 import com.transport.authservice.entity.OtpVerification;
 import com.transport.authservice.enums.OtpPurpose;
 import com.transport.authservice.exception.InvalidTokenException;
+import com.transport.authservice.exception.OtpAttemptExceededException;
 import com.transport.authservice.repository.OtpVerificationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -63,8 +64,12 @@ public class OtpService {
         OtpVerification record = otpRepository.findTopByIdentifierAndPurposeAndUsedFalseOrderByCreatedAtDesc(mobileNumber, purpose)
                 .orElseThrow(() -> new InvalidTokenException("otp.expired"));
 
+//        if(record.getExpiresAt().isBefore(LocalDateTime.now())){
+//            throw new InvalidTokenException("otp.expired");
+//        }
+
         if(record.getAttemptCount() >= OtpService.MAX_ATTEMPTS){
-            throw new RuntimeException("otp.max.attempts");
+            throw new OtpAttemptExceededException("otp.max.attempts");
         }
 
         if(!passwordEncoder.matches(otpInput, record.getOtpCode())){

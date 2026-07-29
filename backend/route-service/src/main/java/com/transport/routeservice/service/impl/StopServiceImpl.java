@@ -24,28 +24,54 @@ public class StopServiceImpl implements StopService {
     private final RouteRepository routeRepository;
 
     @Transactional
-    public StopResponseDto addStop(Long routeId, StopRequestDto dto) {
+    public StopResponseDto addStop(Long routeId,
+                                   StopRequestDto dto) {
+
         Route route = routeRepository.findById(routeId)
                 .orElseThrow(() -> new RouteNotFoundException(
                         "Route not found with id: " + routeId));
-        if (stopRepository.existsByRoute_RouteIdAndSequenceOrder(routeId, dto.getSequenceOrder())) {
+
+        if(stopRepository.existsByRoute_RouteIdAndSequenceOrder(
+                routeId,
+                dto.getSequenceOrder())) {
+
             throw new DuplicateStopSequenceException(
-                    "A stop already exists at sequence order " + dto.getSequenceOrder()
-                            + " for this route");
+                    "A stop already exists at sequence order "
+                            + dto.getSequenceOrder());
+        }
+
+        List<Stop> existingStops =
+                stopRepository.findByRoute_RouteIdOrderBySequenceOrderAsc(routeId);
+
+        if(!existingStops.isEmpty()) {
+            Stop lastStop =
+                    existingStops.get(existingStops.size() - 1);
+
+            if(dto.getDistanceFromStart()
+                    .compareTo(lastStop.getDistanceFromStart()) <= 0) {
+
+                throw new IllegalArgumentException(
+                        "Distance from start must be greater than previous stop distance");
+            }
         }
         Stop stop = new Stop();
+
         stop.setRoute(route);
         stop.setStopName(dto.getStopName());
         stop.setSequenceOrder(dto.getSequenceOrder());
         stop.setDistanceFromStart(dto.getDistanceFromStart());
+
         Stop saved = stopRepository.save(stop);
+
         return RouteMapper.toStopDto(saved);
     }
 
+
     @Transactional(readOnly = true)
     public List<StopResponseDto> getStopsByRoute(Long routeId) {
-        if (!routeRepository.existsById(routeId)) {
-            throw new RouteNotFoundException("Route not found with id: " + routeId);
+        if(!routeRepository.existsByRouteIdAndActiveTrue(routeId)) {
+            throw new RouteNotFoundException(
+                    "Route not found with id: " + routeId);
         }
         return stopRepository.findByRoute_RouteIdOrderBySequenceOrderAsc(routeId).stream()
                 .map(RouteMapper::toStopDto)

@@ -1,12 +1,13 @@
 package com.transport.routeservice.dto.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
+
 import java.math.BigDecimal;
 @Getter
-@Builder
+@Setter
+@NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class FareResponseDto {
     private Long routeId;
     private Long sourceStopId;

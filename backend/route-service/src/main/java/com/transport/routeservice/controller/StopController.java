@@ -8,6 +8,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
 import java.util.List;
 
 
@@ -20,10 +22,10 @@ public class StopController {
     @PreAuthorize("hasAnyRole('TRANSPORT_MANAGER','ADMIN')")
     public ApiResponseDto<StopResponseDto> addStop(@PathVariable Long routeId,
                                                    @Valid @RequestBody StopRequestDto dto) {
-        return ApiResponseDto.success("Stop added successfully", stopService.addStop(routeId, dto));
+        return ApiResponseDto.success("Stop added successfully", stopService.addStop(routeId, dto), LocalDateTime.now());
     }
     @GetMapping
     public ApiResponseDto<List<StopResponseDto>> getStopsByRoute(@PathVariable Long routeId) {
-        return ApiResponseDto.success(stopService.getStopsByRoute(routeId));
+        return ApiResponseDto.success(stopService.getStopsByRoute(routeId), LocalDateTime.now());
     }
 }

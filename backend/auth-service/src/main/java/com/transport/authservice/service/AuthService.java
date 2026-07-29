@@ -38,7 +38,7 @@ public class AuthService {
 // ============== Helper Methods ================
     private AuthResponseDto generateAuthResponse(User user){
         String accessToken = jwtService.generateAccessToken(user);
-        String refreshToken = jwtService.generateAccessToken(user);
+        String refreshToken = jwtService.generateRefreshtoken(user);
 
         RefreshToken tokenEntity = RefreshToken.builder()
                 .userId(user.getUserId())

@@ -19,3 +19,4 @@ public class StopRequestDto {
     @DecimalMin(value = "0.0", message = "Distance cannot be negative")
     private BigDecimal distanceFromStart;
 }
+

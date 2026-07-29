@@ -50,7 +50,7 @@ public class RouteServiceImpl implements RouteService {
     @Override
     @Transactional(readOnly = true)
     public RouteResponseDto getRouteById(Long routeId) {
-        Route route = routeRepository.findById(routeId)
+        Route route = routeRepository.findByRouteIdAndActiveTrue(routeId)
                 .orElseThrow(() -> new RouteNotFoundException(
                         "Route not found with id: " + routeId));
         return RouteMapper.toRouteDto(route);
@@ -67,20 +67,32 @@ public class RouteServiceImpl implements RouteService {
     @Override
     @Transactional
     public RouteResponseDto updateRoute(Long routeId, RouteRequestDto dto) {
-        Route route = routeRepository.findById(routeId)
+
+        Route route = routeRepository.findByRouteIdAndActiveTrue(routeId)
                 .orElseThrow(() -> new RouteNotFoundException(
                         "Route not found with id: " + routeId));
+
+        if (!route.getRouteName().equalsIgnoreCase(dto.getRouteName())
+                && routeRepository.existsByRouteNameIgnoreCase(dto.getRouteName())) {
+
+            throw new DuplicateRouteException(
+                    "A route with name '" + dto.getRouteName() + "' already exists");
+        }
+
         route.setRouteName(dto.getRouteName());
         route.setStartPoint(dto.getStartPoint());
         route.setEndPoint(dto.getEndPoint());
+
         Route updated = routeRepository.save(route);
+
         return RouteMapper.toRouteDtoWithoutRelations(updated);
     }
+
 
     @Override
     @Transactional
     public void deleteRoute(Long routeId) {
-        Route route = routeRepository.findById(routeId)
+        Route route = routeRepository.findByRouteIdAndActiveTrue(routeId)
                 .orElseThrow(() -> new RouteNotFoundException(
                         "Route not found with id: " + routeId));
         route.setActive(false);
@@ -115,7 +127,7 @@ public class RouteServiceImpl implements RouteService {
     @Override
     @Transactional(readOnly = true)
     public FareResponseDto getFare(Long routeId, Long sourceStopId, Long destinationStopId) {
-        Route route = routeRepository.findById(routeId)
+        Route route = routeRepository.findByRouteIdAndActiveTrue(routeId)
                 .orElseThrow(() -> new RouteNotFoundException("Route not found with id: " + routeId));
         var sourceStop = stopRepository.findByStopIdAndRoute_RouteId(sourceStopId, routeId)
                 .orElseThrow(() -> new RouteNotFoundException("Source stop not found for route id: " + routeId));

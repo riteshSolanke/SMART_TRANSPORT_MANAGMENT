@@ -15,6 +15,8 @@ import java.util.Optional;
 
 public interface RouteRepository extends JpaRepository<Route, Long> {
 
+    boolean existsByRouteIdAndActiveTrue(Long routeId);
+
     List<Route> findByActiveTrue();
 
     Optional<Route> findByRouteIdAndActiveTrue(Long routeId);
@@ -26,5 +28,7 @@ public interface RouteRepository extends JpaRepository<Route, Long> {
             "AND LOWER(r.startPoint) = LOWER(:from) AND LOWER(r.endPoint) = LOWER(:to)")
 
     List<Route> findDirectRoutes(@Param("from") String from, @Param("to") String to);
+
+
 
 }
