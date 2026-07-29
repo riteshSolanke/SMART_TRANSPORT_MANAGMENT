@@ -1,0 +1,51 @@
+server:
+  port: ${VEHICLE_SERVICE_PORT:9094}
+  address: ${SERVICE_BIND_ADDRESS:127.0.0.1}
+
+spring:
+  application:
+    name: vehicle-service
+  datasource:
+    url: ${VEHICLE_DB_URL:jdbc:mysql://localhost:3306/vehicle_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC}
+    username: ${VEHICLE_DB_USERNAME}
+    password: ${VEHICLE_DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:validate}
+    show-sql: ${JPA_SHOW_SQL:false}
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+  flyway:
+    enabled: ${FLYWAY_ENABLED:true}
+    baseline-on-migrate: true
+    baseline-version: 0
+  cloud:
+    openfeign:
+      client:
+        config:
+          default:
+            connectTimeout: ${FEIGN_CONNECT_TIMEOUT_MS:3000}
+            readTimeout: ${FEIGN_READ_TIMEOUT_MS:5000}
+            loggerLevel: basic
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+  instance:
+    hostname: localhost
+    prefer-ip-address: true
+
+gateway:
+  secret-key: ${GATEWAY_SHARED_SECRET}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never

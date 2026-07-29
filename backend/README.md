@@ -27,7 +27,7 @@ Use different random values for `JWT_SECRET` and `GATEWAY_SHARED_SECRET`;
 each must contain at least 32 characters. Keep `.env` local—it is ignored by
 Git.
 
-Flyway creates or upgrades the auth, route, and ticket schemas. Hibernate
+Flyway creates or upgrades the auth, route, ticket, and vehicle schemas. Hibernate
 validates the result and does not modify it automatically.
 
 ## Start order
@@ -48,6 +48,9 @@ cd route-service
 .\mvnw.cmd spring-boot:run
 
 cd ticket-service
+.\mvnw.cmd spring-boot:run
+
+cd vehicle-service
 .\mvnw.cmd spring-boot:run
 ```
 
