@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import java.math.BigDecimal;
+import java.time.LocalTime;
 
 @Getter
 @Setter
@@ -17,6 +18,8 @@ public class FareResponseDto {
     private Long routeId;
     private Long sourceStopId;
     private Long destinationStopId;
+    private Long scheduleId;
+    private LocalTime departureTime;
     private BigDecimal distanceKm;
     private BigDecimal fare;
     private boolean peakHourApplied;

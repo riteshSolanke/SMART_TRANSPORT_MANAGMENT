@@ -18,6 +18,7 @@ rejected unless they include the configured gateway secret.
 | `PATCH` | `/api/vehicles/{vehicleId}/status` | Dispatcher/Manager/Admin: change status |
 | `DELETE` | `/api/vehicles/{vehicleId}` | Admin: soft-delete vehicle |
 | `POST` | `/api/vehicles/{vehicleId}/assignments` | Dispatcher/Manager/Admin: assign route schedule |
+| `GET` | `/api/vehicles/assignments/availability` | Authenticated: assigned vehicle capacity for route/schedule/date |
 | `GET` | `/api/vehicles/{vehicleId}/assignments` | Dispatcher/Manager/Admin: assignment history |
 | `PATCH` | `/api/vehicles/{vehicleId}/assignments/{assignmentId}/complete` | Finish assignment |
 | `PATCH` | `/api/vehicles/{vehicleId}/assignments/{assignmentId}/cancel` | Cancel assignment |

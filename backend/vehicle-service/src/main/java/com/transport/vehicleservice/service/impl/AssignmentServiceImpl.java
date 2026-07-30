@@ -2,6 +2,7 @@ package com.transport.vehicleservice.service.impl;
 
 import com.transport.vehicleservice.dto.request.AssignmentRequestDto;
 import com.transport.vehicleservice.dto.response.AssignmentResponseDto;
+import com.transport.vehicleservice.dto.response.VehicleAvailabilityResponseDto;
 import com.transport.vehicleservice.entity.Vehicle;
 import com.transport.vehicleservice.entity.VehicleAssignment;
 import com.transport.vehicleservice.enums.AssignmentStatus;
@@ -84,6 +85,32 @@ public class AssignmentServiceImpl implements AssignmentService {
     @Transactional
     public AssignmentResponseDto cancel(Long vehicleId, Long assignmentId) {
         return finish(vehicleId, assignmentId, AssignmentStatus.CANCELLED);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public VehicleAvailabilityResponseDto getAvailability(
+            Long routeId, Long scheduleId, java.time.LocalDate serviceDate) {
+        return assignmentRepository
+                .findByRouteIdAndScheduleIdAndServiceDateAndStatus(
+                        routeId, scheduleId, serviceDate, AssignmentStatus.ACTIVE)
+                .filter(assignment -> assignment.getVehicle().isActive())
+                .map(assignment -> VehicleAvailabilityResponseDto.builder()
+                        .assigned(true)
+                        .assignmentId(assignment.getAssignmentId())
+                        .vehicleId(assignment.getVehicle().getVehicleId())
+                        .routeId(routeId)
+                        .scheduleId(scheduleId)
+                        .serviceDate(serviceDate)
+                        .capacity(assignment.getVehicle().getCapacity())
+                        .build())
+                .orElseGet(() -> VehicleAvailabilityResponseDto.builder()
+                        .assigned(false)
+                        .routeId(routeId)
+                        .scheduleId(scheduleId)
+                        .serviceDate(serviceDate)
+                        .capacity(0)
+                        .build());
     }
 
     private AssignmentResponseDto finish(

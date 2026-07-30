@@ -15,9 +15,11 @@ public class RouteServiceFallbackFactory implements FallbackFactory<RouteService
     public RouteServiceClient create(Throwable cause) {
         return new RouteServiceClient() {
             @Override
-            public ApiResponseDto<FareResponseDto> getFare(Long routeId, Long sourceStopId, Long destinationStopId) {
-                log.error("Route Service call failed for routeId={}, sourceStopId={}, destinationStopId={}. Cause: {}",
-                        routeId, sourceStopId, destinationStopId, cause.getMessage());
+            public ApiResponseDto<FareResponseDto> getFare(
+                    Long routeId, Long sourceStopId, Long destinationStopId,
+                    Long scheduleId) {
+                log.error("Route Service call failed for routeId={}, scheduleId={}. Cause: {}",
+                        routeId, scheduleId, cause.getClass().getSimpleName());
                 throw new RouteServiceUnavailableException("Route Service is currently unavailable. Please try again later.", cause);
             }
         };

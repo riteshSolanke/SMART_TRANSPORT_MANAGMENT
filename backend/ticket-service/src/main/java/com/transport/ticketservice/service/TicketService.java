@@ -9,7 +9,8 @@ import java.util.List;
 public interface TicketService {
 
     TicketResponseDto bookTicket(
-            TicketRequestDto dto, Long authenticatedUserId, boolean privileged);
+            TicketRequestDto dto, String idempotencyKey,
+            Long authenticatedUserId, boolean privileged);
 
     TicketResponseDto getTicketById(
             Long id, Long authenticatedUserId, boolean privileged);
@@ -20,6 +21,7 @@ public interface TicketService {
     List<TicketResponseDto> getTicketsByUser(
             Long userId, Long authenticatedUserId, boolean privileged);
 
-    void cancelTicket(Long id, Long authenticatedUserId, boolean privileged);
+    TicketResponseDto cancelTicket(
+            Long id, Long authenticatedUserId, boolean privileged);
 
 }

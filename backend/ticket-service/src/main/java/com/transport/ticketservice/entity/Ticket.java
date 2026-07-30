@@ -6,9 +6,23 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 @Entity
-@Table(name = "tickets")
+@Table(
+        name = "tickets",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_ticket_user_idempotency",
+                columnNames = {"user_id", "idempotency_key"}),
+        indexes = {
+                @Index(
+                        name = "idx_ticket_inventory",
+                        columnList = "route_id,schedule_id,service_date,status"),
+                @Index(
+                        name = "idx_ticket_user_booked",
+                        columnList = "user_id,booked_at")
+        })
 @Getter
 @Setter
 @NoArgsConstructor
@@ -29,11 +43,39 @@ public class Ticket {
     @Column(nullable = false)
     private Long routeId;
 
+    @Column(name = "schedule_id")
+    private Long scheduleId;
+
     @Column(nullable = false)
     private Long sourceStopId;
 
     @Column(nullable = false)
     private Long destinationStopId;
+
+    @Column(name = "service_date")
+    private LocalDate serviceDate;
+
+    @Column(name = "departure_time")
+    private LocalTime departureTime;
+
+    @Column(name = "passenger_count", nullable = false)
+    @Builder.Default
+    private Integer passengerCount = 1;
+
+    @Column(name = "unit_fare", precision = 10, scale = 2)
+    private BigDecimal unitFare;
+
+    @Column(name = "assignment_id")
+    private Long assignmentId;
+
+    @Column(name = "vehicle_id")
+    private Long vehicleId;
+
+    @Column(name = "idempotency_key", length = 64)
+    private String idempotencyKey;
+
+    @Column(name = "request_hash", length = 64)
+    private String requestHash;
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal fareAmount;

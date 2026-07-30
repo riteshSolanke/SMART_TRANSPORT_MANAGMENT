@@ -30,6 +30,10 @@ Git.
 Flyway creates or upgrades the auth, route, ticket, and vehicle schemas. Hibernate
 validates the result and does not modify it automatically.
 
+Passenger registration and profile management belong to auth-service.
+Ticket-service references the authenticated user ID and stores only
+transport-booking data.
+
 ## Start order
 
 Run these commands in separate configured terminals:

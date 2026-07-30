@@ -25,10 +25,14 @@ public class TicketController {
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponseDto<TicketResponseDto> bookTicket(
             Authentication authentication,
+            @RequestHeader(name = "Idempotency-Key", required = false)
+            String idempotencyKey,
             @Valid @RequestBody TicketRequestDto dto) {
         return ApiResponseDto.success(
                 "Ticket booked successfully",
-                ticketService.bookTicket(dto, userId(authentication), isPrivileged(authentication)));
+                ticketService.bookTicket(
+                        dto, idempotencyKey,
+                        userId(authentication), isPrivileged(authentication)));
     }
 
     @GetMapping("/{id}")
@@ -60,11 +64,24 @@ public class TicketController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('PASSENGER','ADMIN')")
-    public ApiResponseDto<String> cancelTicket(
+    public ApiResponseDto<TicketResponseDto> cancelTicket(
             Authentication authentication,
             @PathVariable Long id) {
-        ticketService.cancelTicket(id, userId(authentication), isPrivileged(authentication));
-        return ApiResponseDto.success("Ticket cancelled successfully", "OK");
+        return ApiResponseDto.success(
+                "Ticket cancelled successfully",
+                ticketService.cancelTicket(
+                        id, userId(authentication), isPrivileged(authentication)));
+    }
+
+    @GetMapping("/me")
+    @PreAuthorize("hasAnyRole('PASSENGER','ADMIN','TRANSPORT_MANAGER')")
+    public ApiResponseDto<List<TicketResponseDto>> getMyTickets(
+            Authentication authentication) {
+        Long authenticatedUserId = userId(authentication);
+        return ApiResponseDto.success(ticketService.getTicketsByUser(
+                authenticatedUserId,
+                authenticatedUserId,
+                isPrivileged(authentication)));
     }
 
     private Long userId(Authentication authentication) {

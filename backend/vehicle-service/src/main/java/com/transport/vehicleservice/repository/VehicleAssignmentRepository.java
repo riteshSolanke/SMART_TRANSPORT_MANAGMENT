@@ -17,6 +17,10 @@ public interface VehicleAssignmentRepository
             Long routeId, Long scheduleId, LocalDate serviceDate,
             AssignmentStatus status);
 
+    Optional<VehicleAssignment> findByRouteIdAndScheduleIdAndServiceDateAndStatus(
+            Long routeId, Long scheduleId, LocalDate serviceDate,
+            AssignmentStatus status);
+
     boolean existsByVehicle_VehicleIdAndStatus(
             Long vehicleId, AssignmentStatus status);
 

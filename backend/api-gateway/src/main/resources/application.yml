@@ -55,6 +55,7 @@ spring:
                   - Content-Type
                   - Accept-Language
                   - X-Correlation-Id
+                  - Idempotency-Key
                 exposedHeaders:
                   - X-Correlation-Id
                 allowCredentials: true

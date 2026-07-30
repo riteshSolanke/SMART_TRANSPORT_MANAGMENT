@@ -5,6 +5,7 @@ import feign.FeignException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -35,11 +36,36 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage(), request);
     }
 
+    @ExceptionHandler(VehicleServiceUnavailableException.class)
+    public ResponseEntity<ApiErrorResponse> handleVehicleServiceUnavailable(
+            VehicleServiceUnavailableException ex, HttpServletRequest request) {
+        return buildResponse(
+                HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler({SeatUnavailableException.class,
+            IdempotencyConflictException.class})
+    public ResponseEntity<ApiErrorResponse> handleBookingConflict(
+            RuntimeException ex, HttpServletRequest request) {
+        return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiErrorResponse> handleDatabaseConflict(
+            DataIntegrityViolationException ex, HttpServletRequest request) {
+        return buildResponse(
+                HttpStatus.CONFLICT,
+                "The booking conflicts with an existing request",
+                request);
+    }
+
     @ExceptionHandler(FeignException.class)
     public ResponseEntity<ApiErrorResponse> handleFeignException(
             FeignException ex, HttpServletRequest request) {
-        String message = "Dependent service call failed: " + ex.getMessage();
-        return buildResponse(HttpStatus.SERVICE_UNAVAILABLE, message, request);
+        return buildResponse(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                "A dependent service is currently unavailable",
+                request);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

@@ -19,6 +19,7 @@ public interface RouteServiceClient {
     ApiResponseDto<FareResponseDto> getFare(
             @PathVariable("routeId") Long routeId,
             @RequestParam("sourceStopId") Long sourceStopId,
-            @RequestParam("destinationStopId") Long destinationStopId
+            @RequestParam("destinationStopId") Long destinationStopId,
+            @RequestParam("scheduleId") Long scheduleId
     );
 }

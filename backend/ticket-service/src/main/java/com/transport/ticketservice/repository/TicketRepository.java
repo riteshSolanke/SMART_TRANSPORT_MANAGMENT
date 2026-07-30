@@ -7,16 +7,35 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
+import java.time.LocalDate;
+import java.util.Collection;
 
 public interface TicketRepository extends JpaRepository<Ticket, Long> {
 
     Optional<Ticket> findByPnrNumber(String pnrNumber);
 
-    List<Ticket> findByUserId(Long userId);
+    List<Ticket> findByUserIdOrderByBookedAtDesc(Long userId);
 
     List<Ticket> findByUserIdAndStatus(Long userId, TicketStatus status);
 
     boolean existsByPnrNumber(String pnrNumber);
+
+    Optional<Ticket> findByUserIdAndIdempotencyKey(
+            Long userId, String idempotencyKey);
+
+    @Query("""
+            SELECT COALESCE(SUM(t.passengerCount), 0)
+            FROM Ticket t
+            WHERE t.routeId = :routeId
+              AND t.scheduleId = :scheduleId
+              AND t.serviceDate = :serviceDate
+              AND t.status IN :statuses
+            """)
+    Long countReservedPassengers(
+            @Param("routeId") Long routeId,
+            @Param("scheduleId") Long scheduleId,
+            @Param("serviceDate") LocalDate serviceDate,
+            @Param("statuses") Collection<TicketStatus> statuses);
 
     @Query("SELECT t FROM Ticket t WHERE t.routeId = :routeId AND t.status = :status")
     List<Ticket> findByRouteIdAndStatus(@Param("routeId") Long routeId,

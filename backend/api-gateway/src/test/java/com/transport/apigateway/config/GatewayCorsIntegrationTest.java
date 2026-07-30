@@ -21,18 +21,23 @@ class GatewayCorsIntegrationTest {
     private int port;
 
     @Test
-    void configuredFrontendOriginCanCompletePreflightWithoutJwt() {
+    void bookingPreflightAllowsIdempotencyHeaderWithoutJwt() {
         WebTestClient.bindToServer()
                 .baseUrl("http://127.0.0.1:" + port)
                 .build()
                 .method(HttpMethod.OPTIONS)
-                .uri("/api/routes")
+                .uri("/api/tickets")
                 .header(HttpHeaders.ORIGIN, "http://localhost:5173")
-                .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "GET")
+                .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "POST")
+                .header(HttpHeaders.ACCESS_CONTROL_REQUEST_HEADERS,
+                        "authorization,content-type,idempotency-key")
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().valueEquals(
                         HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN,
-                        "http://localhost:5173");
+                        "http://localhost:5173")
+                .expectHeader().valueMatches(
+                        HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS,
+                        "(?i).*idempotency-key.*");
     }
 }

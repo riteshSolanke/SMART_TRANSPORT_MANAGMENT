@@ -116,6 +116,43 @@ class AssignmentServiceImplTest {
         assertThat(response.getCompletedAt()).isNotNull();
     }
 
+    @Test
+    void returnsCapacityForActiveAssignment() {
+        AssignmentRequestDto request = request();
+        VehicleAssignment assignment = new VehicleAssignment();
+        assignment.setAssignmentId(7L);
+        assignment.setVehicle(vehicle);
+        assignment.setRouteId(10L);
+        assignment.setScheduleId(20L);
+        assignment.setServiceDate(request.getServiceDate());
+        assignment.setStatus(AssignmentStatus.ACTIVE);
+        when(assignmentRepository
+                .findByRouteIdAndScheduleIdAndServiceDateAndStatus(
+                        10L, 20L, request.getServiceDate(), AssignmentStatus.ACTIVE))
+                .thenReturn(Optional.of(assignment));
+
+        var availability = service.getAvailability(
+                10L, 20L, request.getServiceDate());
+
+        assertThat(availability.isAssigned()).isTrue();
+        assertThat(availability.getCapacity()).isEqualTo(40);
+        assertThat(availability.getVehicleId()).isEqualTo(1L);
+    }
+
+    @Test
+    void reportsNoAssignmentWithoutLeakingAnError() {
+        LocalDate date = LocalDate.now().plusDays(1);
+        when(assignmentRepository
+                .findByRouteIdAndScheduleIdAndServiceDateAndStatus(
+                        10L, 20L, date, AssignmentStatus.ACTIVE))
+                .thenReturn(Optional.empty());
+
+        var availability = service.getAvailability(10L, 20L, date);
+
+        assertThat(availability.isAssigned()).isFalse();
+        assertThat(availability.getCapacity()).isZero();
+    }
+
     private AssignmentRequestDto request() {
         AssignmentRequestDto request = new AssignmentRequestDto();
         request.setRouteId(10L);

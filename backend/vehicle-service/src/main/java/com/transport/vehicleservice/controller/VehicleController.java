@@ -11,6 +11,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.time.LocalDate;
+import org.springframework.format.annotation.DateTimeFormat;
 
 @RestController
 @RequestMapping("/api/vehicles")
@@ -19,6 +21,17 @@ public class VehicleController {
     private final VehicleService vehicleService;
     private final AssignmentService assignmentService;
     private final TrackingService trackingService;
+
+    @GetMapping("/assignments/availability")
+    public ApiResponseDto<VehicleAvailabilityResponseDto> availability(
+            @RequestParam Long routeId,
+            @RequestParam Long scheduleId,
+            @RequestParam
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate serviceDate) {
+        return ApiResponseDto.success(
+                assignmentService.getAvailability(routeId, scheduleId, serviceDate));
+    }
 
     @PostMapping
     @PreAuthorize("hasAnyRole('TRANSPORT_MANAGER','ADMIN')")
