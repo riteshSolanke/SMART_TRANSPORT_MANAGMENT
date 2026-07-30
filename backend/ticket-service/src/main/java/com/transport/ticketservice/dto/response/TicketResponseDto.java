@@ -32,6 +32,9 @@ public class TicketResponseDto {
     private BigDecimal fareAmount;
     private Long assignmentId;
     private Long vehicleId;
+    private LocalDateTime paymentExpiresAt;
+    private Long paymentId;
+    private LocalDateTime paidAt;
     private TicketStatus status;
     private LocalDateTime bookedAt;
     private LocalDateTime cancelledAt;

@@ -1,0 +1,22 @@
+CREATE TABLE IF NOT EXISTS payments (
+    payment_id BIGINT NOT NULL AUTO_INCREMENT,
+    transaction_reference VARCHAR(50) NOT NULL,
+    ticket_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
+    payment_method VARCHAR(20) NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    idempotency_key VARCHAR(64) NOT NULL,
+    request_hash VARCHAR(64) NOT NULL,
+    failure_reason VARCHAR(255),
+    created_at DATETIME(6) NOT NULL,
+    updated_at DATETIME(6) NOT NULL,
+    completed_at DATETIME(6),
+    refunded_at DATETIME(6),
+    version BIGINT NOT NULL DEFAULT 0,
+    PRIMARY KEY (payment_id),
+    CONSTRAINT uk_payment_reference UNIQUE (transaction_reference),
+    CONSTRAINT uk_payment_user_idempotency UNIQUE (user_id, idempotency_key),
+    INDEX idx_payment_ticket_status (ticket_id, status),
+    INDEX idx_payment_user_created (user_id, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

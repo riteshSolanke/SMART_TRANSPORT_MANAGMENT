@@ -29,13 +29,21 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
             WHERE t.routeId = :routeId
               AND t.scheduleId = :scheduleId
               AND t.serviceDate = :serviceDate
-              AND t.status IN :statuses
+              AND (
+                    t.status IN :confirmedStatuses
+                    OR (
+                        t.status = :pendingStatus
+                        AND t.paymentExpiresAt > :now
+                    )
+              )
             """)
     Long countReservedPassengers(
             @Param("routeId") Long routeId,
             @Param("scheduleId") Long scheduleId,
             @Param("serviceDate") LocalDate serviceDate,
-            @Param("statuses") Collection<TicketStatus> statuses);
+            @Param("confirmedStatuses") Collection<TicketStatus> confirmedStatuses,
+            @Param("pendingStatus") TicketStatus pendingStatus,
+            @Param("now") java.time.LocalDateTime now);
 
     @Query("SELECT t FROM Ticket t WHERE t.routeId = :routeId AND t.status = :status")
     List<Ticket> findByRouteIdAndStatus(@Param("routeId") Long routeId,

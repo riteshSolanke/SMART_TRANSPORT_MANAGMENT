@@ -9,6 +9,7 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.EnumSet;
 
@@ -35,19 +36,29 @@ class TicketRepositoryIntegrationTest {
                 TicketStatus.USED, 1);
         persistTicket("PNR0000003", "booking-003", serviceDate,
                 TicketStatus.CANCELLED, 5);
+        Ticket activeHold = persistTicket(
+                "PNR0000004", "booking-004", serviceDate,
+                TicketStatus.PENDING_PAYMENT, 3);
+        activeHold.setPaymentExpiresAt(LocalDateTime.now().plusMinutes(5));
+        Ticket expiredHold = persistTicket(
+                "PNR0000005", "booking-005", serviceDate,
+                TicketStatus.PENDING_PAYMENT, 9);
+        expiredHold.setPaymentExpiresAt(LocalDateTime.now().minusMinutes(1));
         entityManager.flush();
         entityManager.clear();
 
         Long reserved = repository.countReservedPassengers(
                 10L, 20L, serviceDate,
-                EnumSet.of(TicketStatus.BOOKED, TicketStatus.USED));
+                EnumSet.of(TicketStatus.BOOKED, TicketStatus.USED),
+                TicketStatus.PENDING_PAYMENT,
+                LocalDateTime.now());
 
-        assertThat(reserved).isEqualTo(3L);
+        assertThat(reserved).isEqualTo(6L);
         assertThat(repository.findByUserIdAndIdempotencyKey(
                 42L, "booking-001")).isPresent();
     }
 
-    private void persistTicket(
+    private Ticket persistTicket(
             String pnr, String idempotencyKey, LocalDate serviceDate,
             TicketStatus status, int passengerCount) {
         Ticket ticket = Ticket.builder()
@@ -69,5 +80,6 @@ class TicketRepositoryIntegrationTest {
                 .status(status)
                 .build();
         entityManager.persist(ticket);
+        return ticket;
     }
 }

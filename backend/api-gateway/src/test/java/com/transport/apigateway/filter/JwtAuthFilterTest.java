@@ -39,6 +39,8 @@ class JwtAuthFilterTest {
                         .header(JwtAuthFilter.USER_ID_HEADER, "999")
                         .header(JwtAuthFilter.USER_ROLE_HEADER, "ADMIN")
                         .header(JwtAuthFilter.GATEWAY_KEY_HEADER, "attacker-value")
+                        .header(JwtAuthFilter.PAYMENT_SERVICE_KEY_HEADER,
+                                "attacker-payment-key")
                         .build());
         AtomicReference<ServerWebExchange> forwarded = new AtomicReference<>();
 
@@ -53,6 +55,8 @@ class JwtAuthFilterTest {
                 .get(JwtAuthFilter.USER_ROLE_HEADER)).containsExactly("PASSENGER");
         assertThat(forwarded.get().getRequest().getHeaders()
                 .get(JwtAuthFilter.GATEWAY_KEY_HEADER)).containsExactly(GATEWAY_SECRET);
+        assertThat(forwarded.get().getRequest().getHeaders()
+                .containsKey(JwtAuthFilter.PAYMENT_SERVICE_KEY_HEADER)).isFalse();
     }
 
     @Test
@@ -76,6 +80,8 @@ class JwtAuthFilterTest {
         MockServerWebExchange exchange = MockServerWebExchange.from(
                 MockServerHttpRequest.method(HttpMethod.OPTIONS, "/api/tickets")
                         .header(JwtAuthFilter.USER_ROLE_HEADER, "ADMIN")
+                        .header(JwtAuthFilter.PAYMENT_SERVICE_KEY_HEADER,
+                                "attacker-payment-key")
                         .build());
         AtomicReference<ServerWebExchange> forwarded = new AtomicReference<>();
 
@@ -86,6 +92,8 @@ class JwtAuthFilterTest {
         assertThat(forwarded.get()).isNotNull();
         assertThat(forwarded.get().getRequest().getHeaders()
                 .containsKey(JwtAuthFilter.USER_ROLE_HEADER)).isFalse();
+        assertThat(forwarded.get().getRequest().getHeaders()
+                .containsKey(JwtAuthFilter.PAYMENT_SERVICE_KEY_HEADER)).isFalse();
     }
 
     @Test

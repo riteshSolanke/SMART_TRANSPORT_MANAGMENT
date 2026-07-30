@@ -3,6 +3,8 @@ package com.transport.ticketservice.service;
 import com.transport.ticketservice.dto.request.TicketRequestDto;
 
 import com.transport.ticketservice.dto.response.TicketResponseDto;
+import com.transport.ticketservice.dto.response.TicketPaymentContextDto;
+import com.transport.ticketservice.dto.request.PaymentUpdateRequestDto;
 
 import java.util.List;
 
@@ -23,5 +25,20 @@ public interface TicketService {
 
     TicketResponseDto cancelTicket(
             Long id, Long authenticatedUserId, boolean privileged);
+
+    TicketPaymentContextDto getPaymentContext(
+            Long ticketId, Long authenticatedUserId, boolean privileged);
+
+    TicketResponseDto confirmPayment(
+            Long ticketId, PaymentUpdateRequestDto request,
+            Long authenticatedUserId, boolean privileged);
+
+    TicketResponseDto failPayment(
+            Long ticketId, PaymentUpdateRequestDto request,
+            Long authenticatedUserId, boolean privileged);
+
+    TicketResponseDto confirmRefund(
+            Long ticketId, PaymentUpdateRequestDto request,
+            Long authenticatedUserId, boolean privileged);
 
 }

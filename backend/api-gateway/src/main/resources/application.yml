@@ -88,6 +88,13 @@ spring:
               filters:
                 - name: JwtAuthFilter
 
+            - id: payment-service
+              uri: lb://payment-service
+              predicates:
+                - Path=/api/payments/**
+              filters:
+                - name: JwtAuthFilter
+
             - id: analytics-service
               uri: lb://analytics-service
               predicates:
@@ -101,8 +108,8 @@ eureka:
     service-url:
       defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
   instance:
-    hostname: localhost
-    prefer-ip-address: true
+    hostname: ${EUREKA_INSTANCE_HOSTNAME:localhost}
+    prefer-ip-address: ${EUREKA_PREFER_IP_ADDRESS:false}
 
 
 

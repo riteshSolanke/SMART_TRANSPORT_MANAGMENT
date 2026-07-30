@@ -77,6 +77,15 @@ public class Ticket {
     @Column(name = "request_hash", length = 64)
     private String requestHash;
 
+    @Column(name = "payment_expires_at")
+    private LocalDateTime paymentExpiresAt;
+
+    @Column(name = "payment_id")
+    private Long paymentId;
+
+    @Column(name = "paid_at")
+    private LocalDateTime paidAt;
+
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal fareAmount;
 
@@ -96,7 +105,7 @@ public class Ticket {
     protected void onCreate() {
         this.bookedAt = LocalDateTime.now();
         if (this.status == null) {
-            this.status = TicketStatus.BOOKED;
+            this.status = TicketStatus.PENDING_PAYMENT;
         }
 
     }

@@ -81,6 +81,9 @@ class TicketServiceBookingTest {
         assertThat(response.getFareAmount()).isEqualByComparingTo("50.00");
         assertThat(response.getAssignmentId()).isEqualTo(7L);
         assertThat(response.getVehicleId()).isEqualTo(8L);
+        assertThat(response.getStatus())
+                .isEqualTo(TicketStatus.PENDING_PAYMENT);
+        assertThat(response.getPaymentExpiresAt()).isAfter(LocalDateTime.now());
     }
 
     @Test
@@ -201,7 +204,8 @@ class TicketServiceBookingTest {
                         availability(request, capacity)));
         when(ticketRepository.countReservedPassengers(
                 eq(10L), eq(20L), eq(request.getServiceDate()),
-                anyCollection())).thenReturn(reserved);
+                anyCollection(), eq(TicketStatus.PENDING_PAYMENT),
+                any(LocalDateTime.class))).thenReturn(reserved);
     }
 
     private TicketRequestDto request() {

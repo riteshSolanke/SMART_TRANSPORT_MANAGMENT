@@ -2,8 +2,10 @@ package com.transport.ticketservice.enums;
 
 
     public enum TicketStatus {
+        PENDING_PAYMENT,
         BOOKED,
         CANCELLED,
         EXPIRED,
-        USED
+        USED,
+        PAYMENT_FAILED
     }

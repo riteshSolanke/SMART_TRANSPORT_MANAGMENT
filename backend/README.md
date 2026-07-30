@@ -23,12 +23,12 @@ Get-Content .env |
   }
 ```
 
-Use different random values for `JWT_SECRET` and `GATEWAY_SHARED_SECRET`;
-each must contain at least 32 characters. Keep `.env` local—it is ignored by
-Git.
+Use different random values for `JWT_SECRET`, `GATEWAY_SHARED_SECRET`, and
+`PAYMENT_INTERNAL_SECRET`; each must contain at least 32 characters. Keep
+`.env` local—it is ignored by Git.
 
-Flyway creates or upgrades the auth, route, ticket, and vehicle schemas. Hibernate
-validates the result and does not modify it automatically.
+Flyway creates or upgrades the auth, route, ticket, vehicle, and payment
+schemas. Hibernate validates the result and does not modify it automatically.
 
 Passenger registration and profile management belong to auth-service.
 Ticket-service references the authenticated user ID and stores only
@@ -56,6 +56,9 @@ cd ticket-service
 
 cd vehicle-service
 .\mvnw.cmd spring-boot:run
+
+cd payment-service
+.\mvnw.cmd spring-boot:run
 ```
 
 The public local entry point is `http://localhost:9090`. Business services
@@ -72,3 +75,16 @@ From each service directory:
 
 Security tests are isolated from MySQL and Eureka; they do not mutate a local
 database.
+
+## Payment workflow
+
+Booking creates a ten-minute `PENDING_PAYMENT` ticket hold. Create the payment
+with `POST /api/payments`, supplying the ticket ID, payment method, and a unique
+`Idempotency-Key` header. A successful simulated payment confirms the ticket;
+a decline releases the hold. Refunds are available through
+`POST /api/payments/{paymentId}/refund` before departure.
+
+The local processor defaults to `SUCCESS`. Set
+`PAYMENT_SIMULATOR_OUTCOME=FAILURE` to exercise the declined-payment path. No
+card number, UPI secret, or other sensitive payment credential is accepted or
+stored by this training implementation.

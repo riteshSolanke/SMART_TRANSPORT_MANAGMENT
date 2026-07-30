@@ -3,9 +3,11 @@ package com.transport.ticketservice.service.impl;
 import com.transport.ticketservice.client.RouteServiceClient;
 import com.transport.ticketservice.client.VehicleServiceClient;
 import com.transport.ticketservice.dto.request.TicketRequestDto;
+import com.transport.ticketservice.dto.request.PaymentUpdateRequestDto;
 import com.transport.ticketservice.dto.response.ApiResponseDto;
 import com.transport.ticketservice.dto.response.FareResponseDto;
 import com.transport.ticketservice.dto.response.TicketResponseDto;
+import com.transport.ticketservice.dto.response.TicketPaymentContextDto;
 import com.transport.ticketservice.dto.response.VehicleAvailabilityResponseDto;
 import com.transport.ticketservice.entity.Ticket;
 import com.transport.ticketservice.enums.TicketStatus;
@@ -36,8 +38,9 @@ import java.util.regex.Pattern;
 public class TicketServiceImpl implements TicketService {
     private static final Pattern IDEMPOTENCY_KEY_PATTERN =
             Pattern.compile("^[A-Za-z0-9._:-]{8,64}$");
-    private static final EnumSet<TicketStatus> CAPACITY_HOLDING_STATUSES =
+    private static final EnumSet<TicketStatus> CONFIRMED_CAPACITY_STATUSES =
             EnumSet.of(TicketStatus.BOOKED, TicketStatus.USED);
+    private static final long PAYMENT_HOLD_MINUTES = 10;
 
     private final TicketRepository ticketRepository;
     private final TicketMapper ticketMapper;
@@ -89,11 +92,14 @@ public class TicketServiceImpl implements TicketService {
                         request.getScheduleId(),
                         request.getServiceDate()), request);
 
+        LocalDateTime now = LocalDateTime.now();
         long alreadyReserved = ticketRepository.countReservedPassengers(
                 request.getRouteId(),
                 request.getScheduleId(),
                 request.getServiceDate(),
-                CAPACITY_HOLDING_STATUSES);
+                CONFIRMED_CAPACITY_STATUSES,
+                TicketStatus.PENDING_PAYMENT,
+                now);
         if (alreadyReserved + passengerCount > availability.getCapacity()) {
             throw new SeatUnavailableException(
                     "Only " + Math.max(
@@ -122,7 +128,8 @@ public class TicketServiceImpl implements TicketService {
                 .vehicleId(availability.getVehicleId())
                 .idempotencyKey(idempotencyKey)
                 .requestHash(requestHash)
-                .status(TicketStatus.BOOKED)
+                .paymentExpiresAt(now.plusMinutes(PAYMENT_HOLD_MINUTES))
+                .status(TicketStatus.PENDING_PAYMENT)
                 .travelDate(LocalDateTime.of(
                         request.getServiceDate(), fare.getDepartureTime()))
                 .build();
@@ -171,9 +178,15 @@ public class TicketServiceImpl implements TicketService {
                 .orElseThrow(() -> new TicketNotFoundException(
                         "Ticket not found with id: " + id));
         verifyTicketAccess(ticket, authenticatedUserId, privileged);
-        if (ticket.getStatus() != TicketStatus.BOOKED) {
+        if (ticket.getStatus() == TicketStatus.BOOKED
+                && ticket.getPaymentId() != null) {
             throw new InvalidTicketStateException(
-                    "Only a booked ticket can be cancelled");
+                    "Paid tickets must be cancelled through the refund endpoint");
+        }
+        if (ticket.getStatus() != TicketStatus.BOOKED
+                && ticket.getStatus() != TicketStatus.PENDING_PAYMENT) {
+            throw new InvalidTicketStateException(
+                    "Only pending or booked tickets can be cancelled");
         }
         LocalDateTime departure = ticket.getServiceDate() != null
                 && ticket.getDepartureTime() != null
@@ -186,7 +199,157 @@ public class TicketServiceImpl implements TicketService {
         }
         ticket.setStatus(TicketStatus.CANCELLED);
         ticket.setCancelledAt(LocalDateTime.now());
+        ticket.setPaymentExpiresAt(null);
         return ticketMapper.toResponseDto(ticketRepository.save(ticket));
+    }
+
+    @Override
+    @Transactional
+    public TicketPaymentContextDto getPaymentContext(
+            Long ticketId, Long authenticatedUserId, boolean privileged) {
+        Ticket ticket = requireAccessibleTicket(
+                ticketId, authenticatedUserId, privileged);
+        expirePaymentHoldIfNeeded(ticket);
+        return toPaymentContext(ticket);
+    }
+
+    @Override
+    @Transactional
+    public TicketResponseDto confirmPayment(
+            Long ticketId,
+            PaymentUpdateRequestDto request,
+            Long authenticatedUserId,
+            boolean privileged) {
+        Ticket ticket = requireAccessibleTicket(
+                ticketId, authenticatedUserId, privileged);
+        if (ticket.getStatus() == TicketStatus.BOOKED
+                && request.getPaymentId().equals(ticket.getPaymentId())) {
+            return ticketMapper.toResponseDto(ticket);
+        }
+        expirePaymentHoldIfNeeded(ticket);
+        if (ticket.getStatus() != TicketStatus.PENDING_PAYMENT) {
+            throw new InvalidTicketStateException(
+                    "Ticket is not awaiting payment");
+        }
+        verifyPaymentAmount(ticket, request.getAmount());
+        ticket.setStatus(TicketStatus.BOOKED);
+        ticket.setPaymentId(request.getPaymentId());
+        ticket.setPaidAt(LocalDateTime.now());
+        ticket.setPaymentExpiresAt(null);
+        return ticketMapper.toResponseDto(ticketRepository.save(ticket));
+    }
+
+    @Override
+    @Transactional
+    public TicketResponseDto failPayment(
+            Long ticketId,
+            PaymentUpdateRequestDto request,
+            Long authenticatedUserId,
+            boolean privileged) {
+        Ticket ticket = requireAccessibleTicket(
+                ticketId, authenticatedUserId, privileged);
+        if (ticket.getStatus() == TicketStatus.PAYMENT_FAILED
+                && request.getPaymentId().equals(ticket.getPaymentId())) {
+            return ticketMapper.toResponseDto(ticket);
+        }
+        if (ticket.getStatus() != TicketStatus.PENDING_PAYMENT) {
+            throw new InvalidTicketStateException(
+                    "Ticket is not awaiting payment");
+        }
+        verifyPaymentAmount(ticket, request.getAmount());
+        ticket.setStatus(TicketStatus.PAYMENT_FAILED);
+        ticket.setPaymentId(request.getPaymentId());
+        ticket.setPaymentExpiresAt(null);
+        return ticketMapper.toResponseDto(ticketRepository.save(ticket));
+    }
+
+    @Override
+    @Transactional
+    public TicketResponseDto confirmRefund(
+            Long ticketId,
+            PaymentUpdateRequestDto request,
+            Long authenticatedUserId,
+            boolean privileged) {
+        Ticket ticket = requireAccessibleTicket(
+                ticketId, authenticatedUserId, privileged);
+        if (ticket.getStatus() == TicketStatus.CANCELLED
+                && request.getPaymentId().equals(ticket.getPaymentId())) {
+            return ticketMapper.toResponseDto(ticket);
+        }
+        if (ticket.getStatus() != TicketStatus.BOOKED
+                || ticket.getPaymentId() == null
+                || !ticket.getPaymentId().equals(request.getPaymentId())) {
+            throw new InvalidTicketStateException(
+                    "Ticket does not have the referenced successful payment");
+        }
+        verifyPaymentAmount(ticket, request.getAmount());
+        ensureBeforeDeparture(ticket);
+        ticket.setStatus(TicketStatus.CANCELLED);
+        ticket.setCancelledAt(LocalDateTime.now());
+        return ticketMapper.toResponseDto(ticketRepository.save(ticket));
+    }
+
+    private Ticket requireAccessibleTicket(
+            Long ticketId, Long authenticatedUserId, boolean privileged) {
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new TicketNotFoundException(
+                        "Ticket not found with id: " + ticketId));
+        verifyTicketAccess(ticket, authenticatedUserId, privileged);
+        return ticket;
+    }
+
+    private void expirePaymentHoldIfNeeded(Ticket ticket) {
+        if (ticket.getStatus() == TicketStatus.PENDING_PAYMENT
+                && ticket.getPaymentExpiresAt() != null
+                && !ticket.getPaymentExpiresAt().isAfter(LocalDateTime.now())) {
+            ticket.setStatus(TicketStatus.EXPIRED);
+            ticket.setPaymentExpiresAt(null);
+            ticketRepository.save(ticket);
+        }
+    }
+
+    private TicketPaymentContextDto toPaymentContext(Ticket ticket) {
+        LocalDateTime departure = departureAt(ticket);
+        boolean beforeDeparture =
+                departure == null || departure.isAfter(LocalDateTime.now());
+        return TicketPaymentContextDto.builder()
+                .ticketId(ticket.getTicketId())
+                .userId(ticket.getUserId())
+                .amount(ticket.getFareAmount())
+                .status(ticket.getStatus())
+                .paymentExpiresAt(ticket.getPaymentExpiresAt())
+                .departureAt(departure)
+                .paymentId(ticket.getPaymentId())
+                .payable(ticket.getStatus() == TicketStatus.PENDING_PAYMENT
+                        && ticket.getPaymentExpiresAt() != null
+                        && ticket.getPaymentExpiresAt().isAfter(LocalDateTime.now()))
+                .refundable(ticket.getStatus() == TicketStatus.BOOKED
+                        && ticket.getPaymentId() != null
+                        && beforeDeparture)
+                .build();
+    }
+
+    private void verifyPaymentAmount(Ticket ticket, BigDecimal amount) {
+        if (amount == null || ticket.getFareAmount().compareTo(amount) != 0) {
+            throw new IllegalArgumentException(
+                    "Payment amount does not match ticket total");
+        }
+    }
+
+    private void ensureBeforeDeparture(Ticket ticket) {
+        LocalDateTime departure = departureAt(ticket);
+        if (departure != null && !departure.isAfter(LocalDateTime.now())) {
+            throw new InvalidTicketStateException(
+                    "Ticket departure time has passed");
+        }
+    }
+
+    private LocalDateTime departureAt(Ticket ticket) {
+        return ticket.getServiceDate() != null
+                && ticket.getDepartureTime() != null
+                ? LocalDateTime.of(
+                        ticket.getServiceDate(), ticket.getDepartureTime())
+                : ticket.getTravelDate();
     }
 
     private FareResponseDto requireFare(
