@@ -48,6 +48,9 @@ payment:
   simulator:
     outcome: ${PAYMENT_SIMULATOR_OUTCOME:SUCCESS}
 
+analytics:
+  internal-secret: ${ANALYTICS_INTERNAL_SECRET}
+
 resilience4j:
   circuitbreaker:
     instances:

@@ -37,6 +37,7 @@ public class JwtAuthFilter extends AbstractGatewayFilterFactory<JwtAuthFilter.Co
     static final String USER_ROLE_HEADER = "X-User-Role";
     static final String GATEWAY_KEY_HEADER = "X-Gateway-Key";
     static final String PAYMENT_SERVICE_KEY_HEADER = "X-Payment-Service-Key";
+    static final String ANALYTICS_SERVICE_KEY_HEADER = "X-Analytics-Service-Key";
     private static final Set<String> ALLOWED_ROLES = Set.of(
             "PASSENGER", "CONDUCTOR", "DISPATCHER", "TRANSPORT_MANAGER", "ADMIN");
 
@@ -108,6 +109,7 @@ public class JwtAuthFilter extends AbstractGatewayFilterFactory<JwtAuthFilter.Co
                             headers.remove(USER_ROLE_HEADER);
                             headers.remove(GATEWAY_KEY_HEADER);
                             headers.remove(PAYMENT_SERVICE_KEY_HEADER);
+                            headers.remove(ANALYTICS_SERVICE_KEY_HEADER);
                             headers.set(USER_ID_HEADER, userId);
                             headers.set(USER_ROLE_HEADER, role);
                             headers.set(GATEWAY_KEY_HEADER, gatewaySecret);
@@ -145,6 +147,7 @@ public class JwtAuthFilter extends AbstractGatewayFilterFactory<JwtAuthFilter.Co
                     headers.remove(USER_ROLE_HEADER);
                     headers.remove(GATEWAY_KEY_HEADER);
                     headers.remove(PAYMENT_SERVICE_KEY_HEADER);
+                    headers.remove(ANALYTICS_SERVICE_KEY_HEADER);
                 }))
                 .build();
     }

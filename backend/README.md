@@ -23,12 +23,14 @@ Get-Content .env |
   }
 ```
 
-Use different random values for `JWT_SECRET`, `GATEWAY_SHARED_SECRET`, and
-`PAYMENT_INTERNAL_SECRET`; each must contain at least 32 characters. Keep
+Use different random values for `JWT_SECRET`, `GATEWAY_SHARED_SECRET`,
+`PAYMENT_INTERNAL_SECRET`, and `ANALYTICS_INTERNAL_SECRET`; each must contain
+at least 32 characters. Keep
 `.env` local—it is ignored by Git.
 
-Flyway creates or upgrades the auth, route, ticket, vehicle, and payment
-schemas. Hibernate validates the result and does not modify it automatically.
+Flyway creates or upgrades the auth, route, ticket, vehicle, payment, and
+analytics schemas. Hibernate validates the result and does not modify it
+automatically.
 
 Passenger registration and profile management belong to auth-service.
 Ticket-service references the authenticated user ID and stores only
@@ -59,6 +61,9 @@ cd vehicle-service
 
 cd payment-service
 .\mvnw.cmd spring-boot:run
+
+cd analytics-service
+.\mvnw.cmd spring-boot:run
 ```
 
 The public local entry point is `http://localhost:9090`. Business services
@@ -88,3 +93,11 @@ The local processor defaults to `SUCCESS`. Set
 `PAYMENT_SIMULATOR_OUTCOME=FAILURE` to exercise the declined-payment path. No
 card number, UPI secret, or other sensitive payment credential is accepted or
 stored by this training implementation.
+
+## Analytics workflow
+
+Transport managers and admins can query live usage, revenue, and operational
+performance under `/api/analytics/**`. Generating a report persists an
+auditable period snapshot in `analytics_db`. Source data is fetched through
+secured service APIs; analytics-service does not read another service's
+database directly.

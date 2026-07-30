@@ -1,18 +1,22 @@
 server:
-  port: ${VEHICLE_SERVICE_PORT:9094}
+  port: ${ANALYTICS_SERVICE_PORT:9096}
   address: ${SERVICE_BIND_ADDRESS:127.0.0.1}
 
 spring:
   application:
-    name: vehicle-service
+    name: analytics-service
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoConfiguration
   datasource:
-    url: ${VEHICLE_DB_URL:jdbc:mysql://localhost:3306/vehicle_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC}
-    username: ${VEHICLE_DB_USERNAME}
-    password: ${VEHICLE_DB_PASSWORD}
+    url: ${ANALYTICS_DB_URL:jdbc:mysql://localhost:3306/analytics_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+    username: ${ANALYTICS_DB_USERNAME}
+    password: ${ANALYTICS_DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
       ddl-auto: ${JPA_DDL_AUTO:validate}
+    open-in-view: false
     show-sql: ${JPA_SHOW_SQL:false}
     properties:
       hibernate:
@@ -23,6 +27,8 @@ spring:
     baseline-version: 0
   cloud:
     openfeign:
+      circuitbreaker:
+        enabled: true
       client:
         config:
           default:
@@ -43,12 +49,27 @@ gateway:
 
 analytics:
   internal-secret: ${ANALYTICS_INTERNAL_SECRET}
+  on-time-grace-minutes: ${ANALYTICS_ON_TIME_GRACE_MINUTES:15}
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+  timelimiter:
+    configs:
+      default:
+        timeoutDuration: ${ANALYTICS_SOURCE_TIMEOUT:8s}
+        cancelRunningFuture: true
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,circuitbreakers
   endpoint:
     health:
       show-details: never

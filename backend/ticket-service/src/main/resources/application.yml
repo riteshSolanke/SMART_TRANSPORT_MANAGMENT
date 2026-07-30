@@ -8,6 +8,9 @@ gateway:
 payment:
   internal-secret: ${PAYMENT_INTERNAL_SECRET}
 
+analytics:
+  internal-secret: ${ANALYTICS_INTERNAL_SECRET}
+
 spring:
   application:
     name: ticket-service

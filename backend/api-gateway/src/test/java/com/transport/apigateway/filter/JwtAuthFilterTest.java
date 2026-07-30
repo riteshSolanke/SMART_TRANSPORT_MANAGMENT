@@ -41,6 +41,8 @@ class JwtAuthFilterTest {
                         .header(JwtAuthFilter.GATEWAY_KEY_HEADER, "attacker-value")
                         .header(JwtAuthFilter.PAYMENT_SERVICE_KEY_HEADER,
                                 "attacker-payment-key")
+                        .header(JwtAuthFilter.ANALYTICS_SERVICE_KEY_HEADER,
+                                "attacker-analytics-key")
                         .build());
         AtomicReference<ServerWebExchange> forwarded = new AtomicReference<>();
 
@@ -57,6 +59,8 @@ class JwtAuthFilterTest {
                 .get(JwtAuthFilter.GATEWAY_KEY_HEADER)).containsExactly(GATEWAY_SECRET);
         assertThat(forwarded.get().getRequest().getHeaders()
                 .containsKey(JwtAuthFilter.PAYMENT_SERVICE_KEY_HEADER)).isFalse();
+        assertThat(forwarded.get().getRequest().getHeaders()
+                .containsKey(JwtAuthFilter.ANALYTICS_SERVICE_KEY_HEADER)).isFalse();
     }
 
     @Test
@@ -82,6 +86,8 @@ class JwtAuthFilterTest {
                         .header(JwtAuthFilter.USER_ROLE_HEADER, "ADMIN")
                         .header(JwtAuthFilter.PAYMENT_SERVICE_KEY_HEADER,
                                 "attacker-payment-key")
+                        .header(JwtAuthFilter.ANALYTICS_SERVICE_KEY_HEADER,
+                                "attacker-analytics-key")
                         .build());
         AtomicReference<ServerWebExchange> forwarded = new AtomicReference<>();
 
@@ -94,6 +100,8 @@ class JwtAuthFilterTest {
                 .containsKey(JwtAuthFilter.USER_ROLE_HEADER)).isFalse();
         assertThat(forwarded.get().getRequest().getHeaders()
                 .containsKey(JwtAuthFilter.PAYMENT_SERVICE_KEY_HEADER)).isFalse();
+        assertThat(forwarded.get().getRequest().getHeaders()
+                .containsKey(JwtAuthFilter.ANALYTICS_SERVICE_KEY_HEADER)).isFalse();
     }
 
     @Test
