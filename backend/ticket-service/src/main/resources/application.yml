@@ -12,6 +12,11 @@ analytics:
   internal-secret: ${ANALYTICS_INTERNAL_SECRET}
 
 spring:
+  config:
+    import:
+      - "optional:file:.env[.properties]"
+      - "optional:file:../.env[.properties]"
+
   application:
     name: ticket-service
   datasource:

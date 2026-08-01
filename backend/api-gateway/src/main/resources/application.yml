@@ -24,6 +24,11 @@ jwt:
 
 
 spring:
+  config:
+    import:
+      - "optional:file:.env[.properties]"
+      - "optional:file:../.env[.properties]"
+
   application:
     name: api-gateway
 
@@ -42,7 +47,7 @@ spring:
             add-to-simple-url-handler-mapping: true
             cors-configurations:
               '[/**]':
-                allowedOriginPatterns: ${CORS_ALLOWED_ORIGIN_PATTERNS:http://localhost:5173,http://localhost:3000}
+                allowedOriginPatterns: ${CORS_ALLOWED_ORIGIN_PATTERNS:http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://localhost:5174,http://127.0.0.1:5174}
                 allowedMethods:
                   - GET
                   - POST
@@ -120,8 +125,8 @@ logging:
   level:
     root: INFO
     com.transport.apigateway: INFO
+    org.springframework.web.cors: DEBUG
     org.springframework.cloud.gateway: INFO
-
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} -%msg%n"
 

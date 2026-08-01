@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
     @Slf4j
 	@Service
 	public class ConsoleEmailSender implements EmailSender {
-	    @Value("${app.otp.expose-in-logs:false}")
+	    @Value("${app.otp.expose-in-logs:true}")
 	    private boolean exposeOtpInLogs;
 
 	    @Override
@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 	            log.warn("[DEV MODE] Email OTP delivery for {}: {}", maskEmail(email), otp);
 	            return;
 	        }
+			log.warn("[DEV MODE] Email OTP delivery for {}: {}", maskEmail(email), otp);
 	        log.info("[DEV MODE] Email OTP delivery requested for {}", maskEmail(email));
 	    }
 

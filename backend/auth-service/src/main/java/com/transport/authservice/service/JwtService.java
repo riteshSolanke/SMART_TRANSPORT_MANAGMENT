@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -50,6 +51,7 @@ public class JwtService {
         Date expiry = new Date(now.getTime() + expiryMillis);
 
         return Jwts.builder()
+                .setId(UUID.randomUUID().toString())
                 .setSubject(String.valueOf(user.getUserId()))
                 .claim("mobile", user.getMobileNumber())
                 .claim("role", user.getRole().name())
@@ -83,6 +85,7 @@ public class JwtService {
         Date expiry = new Date(now.getTime() + (1000 * 60 * 10));
 
         return Jwts.builder()
+                .setId(UUID.randomUUID().toString())
                 .setSubject(mobileNumber)
                 .claim("type", "REGISTRATION")
                 .setIssuedAt(now)
@@ -100,6 +103,7 @@ public class JwtService {
         Date expiry = new Date(now.getTime() + (1000 * 60 * 10));
 
         return Jwts.builder()
+                .setId(UUID.randomUUID().toString())
                 .setSubject(mobileNumber)
                 .claim("type", "RESET_PASSWORD")
                 .setIssuedAt(now)

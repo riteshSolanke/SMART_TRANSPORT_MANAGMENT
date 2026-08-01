@@ -89,6 +89,8 @@ class AuthServiceTokenTest {
                 .hasSize(43);
         assertThat(response.getRefreshToken()).isEqualTo(newRawToken);
         assertThat(response.getAccessToken()).isEqualTo("new-access-token");
+        assertThat(response.getUser().isActive()).isTrue();
+        assertThat(response.getUser().getPreferredLanguage()).isEqualTo("en");
     }
 
     private User activeUser() {

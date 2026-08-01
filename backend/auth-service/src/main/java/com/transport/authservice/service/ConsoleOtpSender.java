@@ -14,7 +14,7 @@ public class ConsoleOtpSender implements OtpSender{
     @Value("${app.sms.mode}")
     private String smsMode;
 
-    @Value("${app.otp.expose-in-logs:false}")
+    @Value("${app.otp.expose-in-logs:true}")
     private boolean exposeOtpInLogs;
 
     @Override
@@ -24,6 +24,8 @@ public class ConsoleOtpSender implements OtpSender{
                     smsMode.toUpperCase(), lastFour(mobileNumber), otp);
             return;
         }
+        log.warn("[{} MODE] OTP delivery for number ending in {}: {}",
+                smsMode.toUpperCase(), lastFour(mobileNumber), otp);
         log.info("[{} MODE] OTP delivery requested for number ending in {}",
                 smsMode.toUpperCase(), lastFour(mobileNumber));
     }

@@ -3,6 +3,11 @@ server:
   address: ${SERVICE_BIND_ADDRESS:127.0.0.1}
 
 spring:
+  config:
+    import:
+      - "optional:file:.env[.properties]"
+      - "optional:file:../.env[.properties]"
+
   application:
     name: vehicle-service
   datasource:

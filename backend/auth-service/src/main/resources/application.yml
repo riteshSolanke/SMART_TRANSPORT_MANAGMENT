@@ -5,6 +5,11 @@ server:
 
 #spring app config
 spring:
+   config:
+     import:
+       - "optional:file:.env[.properties]"
+       - "optional:file:../.env[.properties]"
+
    application:
      name: auth-service
 
@@ -62,7 +67,8 @@ logging:
   level:
     root: INFO
     com.transport.authservice: INFO
-    org.springframework.security: INFO
+    org.springframework.security: DEBUG
+
 
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger {36} - %msg%n"
@@ -74,7 +80,7 @@ app:
   sms:
     mode: ${SMS_MODE:console}
   otp:
-    expose-in-logs: ${EXPOSE_OTP_IN_LOGS:false}
+    expose-in-logs: ${EXPOSE_OTP_IN_LOGS:true}
 
 management:
   endpoints:

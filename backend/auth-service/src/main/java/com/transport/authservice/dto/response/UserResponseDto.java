@@ -21,5 +21,7 @@ public class UserResponseDto {
     private Role role;
     private boolean mobileVerified;
     private boolean emailVerified;
+    private boolean active;
+    private String preferredLanguage;
 
 }

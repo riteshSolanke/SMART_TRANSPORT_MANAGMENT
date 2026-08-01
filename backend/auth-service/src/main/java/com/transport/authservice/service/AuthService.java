@@ -73,6 +73,8 @@ public class AuthService {
                 .role(user.getRole())
                 .mobileVerified(user.isMobileVerified())
                 .emailVerified(user.isEmailVerified())
+                .active(user.isActive())
+                .preferredLanguage(user.getPreferredLanguage())
                 .build();
     }
 

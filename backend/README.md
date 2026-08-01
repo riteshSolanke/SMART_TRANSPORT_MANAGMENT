@@ -7,12 +7,17 @@
 - PowerShell
 
 The backend requires secrets and database credentials through environment
-variables. No operational secret is stored in Git.
+variables. No operational secret is stored in Git. For local development,
+each service also imports an optional `.env` file from its working directory
+or parent directory. This supports both IntelliJ runs whose working directory
+is `backend` and Maven runs started inside an individual service directory.
 
 ## Configure a local terminal
 
-Copy `.env.example` to `.env`, replace every `CHANGE_ME` value, and load it
-into each PowerShell terminal before starting a service:
+Copy `.env.example` to `.env` and replace every `CHANGE_ME` value. Services
+started from `backend` or a direct service folder load that file
+automatically. The following command remains useful when starting a service
+from another working directory:
 
 ```powershell
 Get-Content .env |

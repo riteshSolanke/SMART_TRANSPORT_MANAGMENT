@@ -1,121 +1,93 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { lazy, Suspense } from 'react'
+import { Navigate, Route, Routes } from 'react-router-dom'
+import AppShell from './components/layout/AppShell.jsx'
+import PageLoader from './components/ui/PageLoader.jsx'
+import { useAuth } from './context/authContext.js'
+import ProtectedRoute from './routes/ProtectedRoute.jsx'
+
+const AccessDeniedPage = lazy(() => import('./pages/AccessDeniedPage.jsx'))
+const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage.jsx'))
+const BookingPage = lazy(() => import('./pages/BookingPage.jsx'))
+const DashboardPage = lazy(() => import('./pages/DashboardPage.jsx'))
+const FleetPage = lazy(() => import('./pages/FleetPage.jsx'))
+const ForgotPasswordPage = lazy(() => import('./pages/auth/ForgotPasswordPage.jsx'))
+const LoginPage = lazy(() => import('./pages/auth/LoginPage.jsx'))
+const RegisterPage = lazy(() => import('./pages/auth/RegisterPage.jsx'))
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'))
+const PaymentsPage = lazy(() => import('./pages/PaymentsPage.jsx'))
+const ProfilePage = lazy(() => import('./pages/ProfilePage.jsx'))
+const RoutesPage = lazy(() => import('./pages/RoutesPage.jsx'))
+const TicketsPage = lazy(() => import('./pages/TicketsPage.jsx'))
+const UsersPage = lazy(() => import('./pages/UsersPage.jsx'))
+
+const managerRoles = ['TRANSPORT_MANAGER', 'ADMIN']
+const fleetRoles = ['CONDUCTOR', 'DISPATCHER', 'TRANSPORT_MANAGER', 'ADMIN']
 
 function App() {
-  const [count, setCount] = useState(0)
+  const { isBootstrapping } = useAuth()
+
+  if (isBootstrapping) {
+    return <PageLoader fullScreen label="Preparing your transport workspace" />
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <Suspense fallback={<PageLoader fullScreen label="Loading your workspace" />}>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/access-denied" element={<AccessDeniedPage />} />
 
-      <div className="ticks"></div>
+        <Route element={<ProtectedRoute />}>
+          <Route element={<AppShell />}>
+            <Route index element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/routes" element={<RoutesPage />} />
+            <Route
+              path="/book"
+              element={<ProtectedRoute allowedRoles={['PASSENGER', 'ADMIN']} />}
+            >
+              <Route index element={<BookingPage />} />
+            </Route>
+            <Route
+              path="/tickets"
+              element={
+                <ProtectedRoute allowedRoles={['PASSENGER', 'TRANSPORT_MANAGER', 'ADMIN']} />
+              }
+            >
+              <Route index element={<TicketsPage />} />
+            </Route>
+            <Route
+              path="/payments"
+              element={<ProtectedRoute allowedRoles={['PASSENGER', 'ADMIN']} />}
+            >
+              <Route index element={<PaymentsPage />} />
+            </Route>
+            <Route
+              path="/fleet"
+              element={<ProtectedRoute allowedRoles={fleetRoles} />}
+            >
+              <Route index element={<FleetPage />} />
+            </Route>
+            <Route
+              path="/analytics"
+              element={<ProtectedRoute allowedRoles={managerRoles} />}
+            >
+              <Route index element={<AnalyticsPage />} />
+            </Route>
+            <Route
+              path="/users"
+              element={<ProtectedRoute allowedRoles={['ADMIN']} />}
+            >
+              <Route index element={<UsersPage />} />
+            </Route>
+            <Route path="/profile" element={<ProfilePage />} />
+          </Route>
+        </Route>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </Suspense>
   )
 }
 

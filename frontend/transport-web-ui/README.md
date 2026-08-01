@@ -1,16 +1,51 @@
-# React + Vite
+# TransitFlow React Web Application
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Responsive React frontend for the Smart Public Transport Ticketing & Route
+Management System. The application is written in JavaScript and JSX only.
 
-Currently, two official plugins are available:
+## Included workflows
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Password and OTP authentication, passenger registration, and password reset
+- Role-aware navigation for passenger, conductor, dispatcher, manager, and admin
+- Route discovery and route management
+- Passenger booking, ticket lifecycle, and payment processing
+- Fleet assignment and simulated location tracking
+- Usage, revenue, and service-performance analytics
+- User and staff administration
 
-## React Compiler
+## Frontend stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- React 19 and Vite
+- React Router
+- TanStack Query and TanStack Table
+- React Hook Form and Zod
+- Axios with access-token refresh handling
+- React Icons, React Hot Toast, and SweetAlert2
+- Recharts
+- Vitest and Testing Library
 
-## Expanding the ESLint configuration
+## Local development
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+The backend gateway is expected at `http://127.0.0.1:9090`. In development,
+the API client connects to that gateway directly using its configured CORS
+policy. This avoids coupling API behavior to the development server's proxy.
+
+```powershell
+npm install
+npm run dev
+```
+
+Open `http://127.0.0.1:5173`.
+
+To point the UI at another gateway, copy `.env.example` to `.env.local` and set
+`VITE_API_BASE_URL`. Production deployments should set that value to their
+public gateway URL, or leave it empty when the gateway is served on the same
+origin.
+
+## Quality checks
+
+```powershell
+npm run lint
+npm run test
+npm run build
+```

@@ -40,4 +40,21 @@ class GatewayCorsIntegrationTest {
                         HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS,
                         "(?i).*idempotency-key.*");
     }
+
+    @Test
+    void authPreflightAllowsViteLoopbackOrigin() {
+        WebTestClient.bindToServer()
+                .baseUrl("http://127.0.0.1:" + port)
+                .build()
+                .method(HttpMethod.OPTIONS)
+                .uri("/api/auth/login/send-otp")
+                .header(HttpHeaders.ORIGIN, "http://127.0.0.1:5173")
+                .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "POST")
+                .header(HttpHeaders.ACCESS_CONTROL_REQUEST_HEADERS, "content-type")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().valueEquals(
+                        HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN,
+                        "http://127.0.0.1:5173");
+    }
 }

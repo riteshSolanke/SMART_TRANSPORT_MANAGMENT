@@ -10,7 +10,9 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -157,6 +159,24 @@ public class GlobalExceptionHandler {
         log.warn("Validation failed at {}: {}", req.getRequestURI(), fieldErrors);
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ErrorResponseDto> handleMethodNotSupported(
+            HttpRequestMethodNotSupportedException ex,
+            HttpServletRequest req) {
+        log.warn("Method {} is not supported at {}", ex.getMethod(), req.getRequestURI());
+        return buildErrorResponse(
+                HttpStatus.METHOD_NOT_ALLOWED,
+                "Request method " + ex.getMethod() + " is not supported for this endpoint");
+    }
+
+    @ExceptionHandler({IllegalArgumentException.class, HttpMessageNotReadableException.class})
+    public ResponseEntity<ErrorResponseDto> handleBadRequest(
+            Exception ex,
+            HttpServletRequest req) {
+        log.warn("Bad request at {}: {}", req.getRequestURI(), ex.getMessage());
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Invalid request");
     }
 
 
