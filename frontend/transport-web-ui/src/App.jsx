@@ -17,8 +17,11 @@ const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'))
 const PaymentsPage = lazy(() => import('./pages/PaymentsPage.jsx'))
 const ProfilePage = lazy(() => import('./pages/ProfilePage.jsx'))
 const RoutesPage = lazy(() => import('./pages/RoutesPage.jsx'))
+const RouteStopsPage = lazy(() => import('./pages/RouteStopsPage.jsx'))
+const RouteSchedulesPage = lazy(() => import('./pages/RouteSchedulesPage.jsx'))
 const TicketsPage = lazy(() => import('./pages/TicketsPage.jsx'))
 const UsersPage = lazy(() => import('./pages/UsersPage.jsx'))
+
 
 const managerRoles = ['TRANSPORT_MANAGER', 'ADMIN']
 const fleetRoles = ['CONDUCTOR', 'DISPATCHER', 'TRANSPORT_MANAGER', 'ADMIN']
@@ -49,6 +52,22 @@ function App() {
             >
               <Route index element={<BookingPage />} />
             </Route>
+
+            <Route
+              path="/routes/:routeId/stops"
+              element={<ProtectedRoute allowedRoles={managerRoles} />}
+            >
+              <Route index element={<RouteStopsPage />} />
+          </Route>
+
+          <Route
+            path="/routes/:routeId/schedules"
+            element={<ProtectedRoute allowedRoles={managerRoles} />}
+          >
+            <Route index element={<RouteSchedulesPage />} />
+          </Route>
+
+
             <Route
               path="/tickets"
               element={

@@ -257,6 +257,22 @@ export default function RoutesPage() {
                         </Link>
                       )}
                       {canManage && !isSearchResult && (
+                        <>                    
+                        
+                       <Link
+                          className="button button--secondary button--small"
+                          to={`/routes/${route.routeId}/stops`}
+                        >
+                          Stops
+                        </Link>
+
+                        <Link
+                          className="button button--secondary button--small"
+                          to={`/routes/${route.routeId}/schedules`}
+                        >
+                          Schedules
+                        </Link>
+
                         <button
                           className="icon-button"
                           aria-label={`Edit ${route.routeName}`}
@@ -264,6 +280,7 @@ export default function RoutesPage() {
                         >
                           <FiEdit2 />
                         </button>
+                        </>                       
                       )}
                       {role === 'ADMIN' && !isSearchResult && (
                         <button

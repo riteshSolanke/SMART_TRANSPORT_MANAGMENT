@@ -2,12 +2,14 @@ package com.transport.ticketservice.config;
 
 import feign.Logger;
 import feign.RequestInterceptor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+@Slf4j
 @Configuration
 public class FeignConfig {
     @Bean
@@ -20,7 +22,10 @@ public class FeignConfig {
             @Value("${gateway.secret-key}") String gatewaySecret) {
         return template -> {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            log.info("Feign Auth = {}", authentication);
+
             if (authentication == null || !authentication.isAuthenticated()) {
+                log.warn("Authentication is NULL");
                 return;
             }
             String role = authentication.getAuthorities().stream()

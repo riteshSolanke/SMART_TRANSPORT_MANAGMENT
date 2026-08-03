@@ -51,11 +51,44 @@ export const routesApi = {
   all: () => data(apiClient.get('/api/routes')),
   get: (routeId) => data(apiClient.get(`/api/routes/${routeId}`)),
   search: (params) => data(apiClient.get('/api/routes/search', { params })),
-  fare: (routeId, params) =>
-    data(apiClient.get(`/api/routes/${routeId}/fare`, { params })),
+  fare: (routeId, params) =>  data(apiClient.get(`/api/routes/${routeId}/fare`, { params })),
   create: (payload) => data(apiClient.post('/api/routes', payload)),
   update: (routeId, payload) => data(apiClient.put(`/api/routes/${routeId}`, payload)),
   remove: (routeId) => data(apiClient.delete(`/api/routes/${routeId}`)),
+}
+
+export const stopsApi = {
+  all: (routeId) =>
+    data(apiClient.get(`/api/routes/${routeId}/stops`)),
+
+  get: (routeId, stopId) =>
+    data(apiClient.get(`/api/routes/${routeId}/stops/${stopId}`)),
+
+  create: (routeId, payload) =>
+    data(apiClient.post(`/api/routes/${routeId}/stops`, payload)),
+
+  update: (routeId, stopId, payload) =>
+    data(apiClient.put(`/api/routes/${routeId}/stops/${stopId}`, payload)),
+
+  remove: (routeId, stopId) =>
+    data(apiClient.delete(`/api/routes/${routeId}/stops/${stopId}`)),
+}
+
+export const schedulesApi = {
+  all: (routeId) =>
+    data(apiClient.get(`/api/routes/${routeId}/schedules`)),
+
+  get: (routeId, scheduleId) =>
+    data(apiClient.get(`/api/routes/${routeId}/schedules/${scheduleId}`)),
+
+  create: (routeId, payload) =>
+    data(apiClient.post(`/api/routes/${routeId}/schedules`, payload)),
+
+  update: (routeId, scheduleId, payload) =>
+    data(apiClient.put(`/api/routes/${routeId}/schedules/${scheduleId}`, payload)),
+
+  remove: (routeId, scheduleId) =>
+    data(apiClient.delete(`/api/routes/${routeId}/schedules/${scheduleId}`)),
 }
 
 export const ticketsApi = {
