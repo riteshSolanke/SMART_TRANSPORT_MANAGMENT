@@ -5,16 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f1f4c7b1-828f-4130-aa88-f871fbe23e44" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/backend/ticket-service/src/main/java/com/transport/ticketservice/config/FeignHeaderConfig.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/encodings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/.idea/modules.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/api-gateway/src/main/java/com/transport/apigateway/filter/JwtAuthFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/api-gateway/src/main/java/com/transport/apigateway/filter/JwtAuthFilter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/auth-service/src/main/java/com/transport/authservice/exception/InvalidTokenException.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/auth-service/src/main/java/com/transport/authservice/exception/InvalidTokenException.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/auth-service/src/main/java/com/transport/authservice/service/AuthService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/auth-service/src/main/java/com/transport/authservice/service/AuthService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/auth-service/src/main/java/com/transport/authservice/service/OtpService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/auth-service/src/main/java/com/transport/authservice/service/OtpService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/auth-service/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/auth-service/src/main/resources/application.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/route-service/src/main/java/com/transport/routeservice/controller/RouteController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/route-service/src/main/java/com/transport/routeservice/controller/RouteController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/analytics-service/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/analytics-service/pom.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -55,9 +53,12 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "main",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "git-widget-placeholder": "codex/phase-7-react-frontend",
+    "ignore.virus.scanning.warn.message": "true",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/2507263/Desktop/TRANSPORT_SYS_PROJECT",
+    "last_opened_file_path": "C:/Users/2507178/Desktop/project1/SMART_TRANSPORT_MANAGMENT",
     "run.code.analysis.last.selected.profile": "pProject Default"
   }
 }]]></component>
@@ -93,5 +94,8 @@
       <updated>1784182840906</updated>
     </task>
     <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
   </component>
 </project>

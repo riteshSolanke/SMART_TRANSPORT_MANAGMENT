@@ -7,5 +7,15 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="Maven: org.projectlombok:lombok:1.18.38" level="project" />
+    <orderEntry type="library" name="Maven: org.springframework:spring-context:6.2.8" level="project" />
+    <orderEntry type="library" name="Maven: org.springframework.security:spring-security-core:6.5.1" level="project" />
+    <orderEntry type="library" name="Maven: org.springframework:spring-web:7.0.8" level="project" />
+    <orderEntry type="library" name="Maven: io.github.openfeign:feign-core:13.6.1" level="project" />
+    <orderEntry type="library" name="Maven: org.springframework:spring-beans:6.2.8" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.tomcat.embed:tomcat-embed-core:11.0.22" level="project" />
+    <orderEntry type="library" name="Maven: org.springframework.security:spring-security-config:6.5.1" level="project" />
+    <orderEntry type="library" name="Maven: org.springframework.security:spring-security-web:6.5.1" level="project" />
+    <orderEntry type="library" name="Maven: jakarta.validation:jakarta.validation-api:3.0.2" level="project" />
   </component>
 </module>
