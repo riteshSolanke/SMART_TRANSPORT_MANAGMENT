@@ -52,7 +52,10 @@ export default function FleetPage() {
   })
 
   const vehiclesQuery = useQuery({ queryKey: ['vehicles'], queryFn: vehiclesApi.all })
-  const routesQuery = useQuery({ queryKey: ['routes'], queryFn: routesApi.all })
+  const routesQuery = useQuery({
+    queryKey: ['routes', 'detailed'],
+    queryFn: routesApi.allDetailed,
+  })
   const assignmentsQuery = useQuery({
     queryKey: ['vehicles', historyVehicle?.vehicleId, 'assignments'],
     queryFn: () => vehiclesApi.assignments(historyVehicle.vehicleId),
@@ -454,26 +457,47 @@ export default function FleetPage() {
           <ErrorState error={assignmentsQuery.error} onRetry={assignmentsQuery.refetch} compact />
         ) : assignmentsQuery.data?.length ? (
           <div className="assignment-list">
-            {assignmentsQuery.data.map((assignment) => (
-              <article key={assignment.assignmentId}>
-                <span className="assignment-list__icon"><FiNavigation /></span>
-                <div>
-                  <strong>Route #{assignment.routeId} · Schedule #{assignment.scheduleId}</strong>
-                  <span>{formatDate(assignment.serviceDate)} · Assigned {formatDate(assignment.assignedAt, 'dd MMM, hh:mm a')}</span>
-                </div>
-                <StatusBadge status={assignment.status} />
-                {assignment.status === 'ACTIVE' && (
-                  <div className="assignment-list__actions">
-                    <button className="icon-button icon-button--success" onClick={() => changeAssignment(assignment, 'complete')} title="Complete">
-                      <FiCheck />
-                    </button>
-                    <button className="icon-button icon-button--danger" onClick={() => changeAssignment(assignment, 'cancel')} title="Cancel">
-                      <FiX />
-                    </button>
+            {assignmentsQuery.data.map((assignment) => {
+              const assignmentRoute = (routesQuery.data || []).find(
+                (route) => String(route.routeId) === String(assignment.routeId),
+              )
+              const assignmentSchedule = assignmentRoute?.schedules?.find(
+                (schedule) =>
+                  String(schedule.scheduleId) === String(assignment.scheduleId),
+              )
+
+              return (
+                <article key={assignment.assignmentId}>
+                  <span className="assignment-list__icon"><FiNavigation /></span>
+                  <div>
+                    <strong>
+                      {assignmentRoute?.routeName || `Route #${assignment.routeId}`}
+                      {' · '}
+                      Schedule #{assignment.scheduleId}
+                    </strong>
+                    <span>
+                      {formatDate(assignment.serviceDate)}
+                      {' · '}
+                      {assignmentSchedule
+                        ? `${formatTime(assignmentSchedule.departureTime)} – ${formatTime(assignmentSchedule.arrivalTime)}`
+                        : 'Departure time unavailable'}
+                      {' · '}Assigned {formatDate(assignment.assignedAt, 'dd MMM, hh:mm a')}
+                    </span>
                   </div>
-                )}
-              </article>
-            ))}
+                  <StatusBadge status={assignment.status} />
+                  {assignment.status === 'ACTIVE' && (
+                    <div className="assignment-list__actions">
+                      <button className="icon-button icon-button--success" onClick={() => changeAssignment(assignment, 'complete')} title="Complete">
+                        <FiCheck />
+                      </button>
+                      <button className="icon-button icon-button--danger" onClick={() => changeAssignment(assignment, 'cancel')} title="Cancel">
+                        <FiX />
+                      </button>
+                    </div>
+                  )}
+                </article>
+              )
+            })}
           </div>
         ) : (
           <EmptyState title="No assignment history" description="Assignments for this vehicle will appear here." />

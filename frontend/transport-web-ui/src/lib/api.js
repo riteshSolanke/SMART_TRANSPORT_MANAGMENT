@@ -49,6 +49,14 @@ export const authApi = {
 
 export const routesApi = {
   all: () => data(apiClient.get('/api/routes')),
+  allDetailed: async () => {
+    const routes = await data(apiClient.get('/api/routes'))
+    return Promise.all(
+      (routes || []).map((route) =>
+        data(apiClient.get(`/api/routes/${route.routeId}`)),
+      ),
+    )
+  },
   get: (routeId) => data(apiClient.get(`/api/routes/${routeId}`)),
   search: (params) => data(apiClient.get('/api/routes/search', { params })),
   fare: (routeId, params) =>  data(apiClient.get(`/api/routes/${routeId}/fare`, { params })),

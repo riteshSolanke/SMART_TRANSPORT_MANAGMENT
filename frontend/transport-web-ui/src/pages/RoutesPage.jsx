@@ -45,8 +45,8 @@ export default function RoutesPage() {
   })
 
   const routesQuery = useQuery({
-    queryKey: ['routes'],
-    queryFn: routesApi.all,
+    queryKey: ['routes', 'detailed'],
+    queryFn: routesApi.allDetailed,
   })
   const searchQuery = useQuery({
     queryKey: ['routes', 'search', searchParams],
