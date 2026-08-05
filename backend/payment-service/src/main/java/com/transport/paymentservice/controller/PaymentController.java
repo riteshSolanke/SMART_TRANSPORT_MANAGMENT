@@ -23,7 +23,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/payments")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('PASSENGER','ADMIN')")
+@PreAuthorize("hasAnyRole('PASSENGER','CONDUCTOR','ADMIN')")
 public class PaymentController {
     private final PaymentService paymentService;
 

@@ -3,6 +3,7 @@ package com.transport.ticketservice.controller;
 import com.transport.ticketservice.dto.request.TicketRequestDto;
 import com.transport.ticketservice.dto.response.ApiResponseDto;
 import com.transport.ticketservice.dto.response.TicketResponseDto;
+import com.transport.ticketservice.dto.response.SeatAvailabilityResponseDto;
 import com.transport.ticketservice.service.TicketService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.format.annotation.DateTimeFormat;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -21,7 +24,7 @@ public class TicketController {
 
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('PASSENGER','ADMIN')")
+    @PreAuthorize("hasAnyRole('PASSENGER','CONDUCTOR','ADMIN')")
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponseDto<TicketResponseDto> bookTicket(
             Authentication authentication,
@@ -35,8 +38,22 @@ public class TicketController {
                         userId(authentication), isPrivileged(authentication)));
     }
 
+    @GetMapping("/availability")
+    @PreAuthorize("hasAnyRole('PASSENGER','CONDUCTOR','TRANSPORT_MANAGER','ADMIN')")
+    public ApiResponseDto<SeatAvailabilityResponseDto> getAvailability(
+            Authentication authentication,
+            @RequestParam Long routeId,
+            @RequestParam Long scheduleId,
+            @RequestParam
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate serviceDate) {
+        return ApiResponseDto.success(ticketService.getSeatAvailability(
+                routeId, scheduleId, serviceDate,
+                userId(authentication)));
+    }
+
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('PASSENGER','ADMIN','TRANSPORT_MANAGER')")
+    @PreAuthorize("hasAnyRole('PASSENGER','CONDUCTOR','ADMIN','TRANSPORT_MANAGER')")
     public ApiResponseDto<TicketResponseDto> getTicketById(
             Authentication authentication,
             @PathVariable Long id) {
@@ -45,7 +62,7 @@ public class TicketController {
     }
 
     @GetMapping("/pnr/{pnrNumber}")
-    @PreAuthorize("hasAnyRole('PASSENGER','ADMIN','TRANSPORT_MANAGER')")
+    @PreAuthorize("hasAnyRole('PASSENGER','CONDUCTOR','ADMIN','TRANSPORT_MANAGER')")
     public ApiResponseDto<TicketResponseDto> getTicketByPnr(
             Authentication authentication,
             @PathVariable String pnrNumber) {
@@ -54,7 +71,7 @@ public class TicketController {
     }
 
     @GetMapping("/user/{userId}")
-    @PreAuthorize("hasAnyRole('PASSENGER','ADMIN','TRANSPORT_MANAGER')")
+    @PreAuthorize("hasAnyRole('PASSENGER','CONDUCTOR','ADMIN','TRANSPORT_MANAGER')")
     public ApiResponseDto<List<TicketResponseDto>> getTicketsByUser(
             Authentication authentication,
             @PathVariable Long userId) {
@@ -63,7 +80,7 @@ public class TicketController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('PASSENGER','ADMIN')")
+    @PreAuthorize("hasAnyRole('PASSENGER','CONDUCTOR','ADMIN')")
     public ApiResponseDto<TicketResponseDto> cancelTicket(
             Authentication authentication,
             @PathVariable Long id) {
@@ -74,7 +91,7 @@ public class TicketController {
     }
 
     @GetMapping("/me")
-    @PreAuthorize("hasAnyRole('PASSENGER','ADMIN','TRANSPORT_MANAGER')")
+    @PreAuthorize("hasAnyRole('PASSENGER','CONDUCTOR','ADMIN','TRANSPORT_MANAGER')")
     public ApiResponseDto<List<TicketResponseDto>> getMyTickets(
             Authentication authentication) {
         Long authenticatedUserId = userId(authentication);

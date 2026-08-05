@@ -103,6 +103,8 @@ export const ticketsApi = {
   mine: () => data(apiClient.get('/api/tickets/me')),
   get: (ticketId) => data(apiClient.get(`/api/tickets/${ticketId}`)),
   byPnr: (pnr) => data(apiClient.get(`/api/tickets/pnr/${pnr}`)),
+  availability: (params) =>
+    data(apiClient.get('/api/tickets/availability', { params })),
   book: (payload, idempotencyKey) =>
     data(
       apiClient.post('/api/tickets', payload, {

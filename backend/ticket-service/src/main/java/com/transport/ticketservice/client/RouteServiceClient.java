@@ -7,6 +7,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestHeader;
 
 @FeignClient(
         name = "route-service",
@@ -20,6 +21,8 @@ public interface RouteServiceClient {
             @PathVariable("routeId") Long routeId,
             @RequestParam("sourceStopId") Long sourceStopId,
             @RequestParam("destinationStopId") Long destinationStopId,
-            @RequestParam("scheduleId") Long scheduleId
+            @RequestParam("scheduleId") Long scheduleId,
+            @RequestHeader("X-User-Id") String userId,
+            @RequestHeader("X-User-Role") String role
     );
 }

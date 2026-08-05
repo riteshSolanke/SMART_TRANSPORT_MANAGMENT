@@ -8,6 +8,7 @@ import com.transport.ticketservice.dto.response.ApiResponseDto;
 import com.transport.ticketservice.dto.response.FareResponseDto;
 import com.transport.ticketservice.dto.response.TicketResponseDto;
 import com.transport.ticketservice.dto.response.TicketPaymentContextDto;
+import com.transport.ticketservice.dto.response.SeatAvailabilityResponseDto;
 import com.transport.ticketservice.dto.response.VehicleAvailabilityResponseDto;
 import com.transport.ticketservice.entity.Ticket;
 import com.transport.ticketservice.enums.TicketStatus;
@@ -15,6 +16,7 @@ import com.transport.ticketservice.exception.IdempotencyConflictException;
 import com.transport.ticketservice.exception.InvalidTicketStateException;
 import com.transport.ticketservice.exception.SeatUnavailableException;
 import com.transport.ticketservice.exception.TicketNotFoundException;
+import com.transport.ticketservice.exception.VehicleServiceUnavailableException;
 import com.transport.ticketservice.mapper.TicketMapper;
 import com.transport.ticketservice.repository.TicketRepository;
 import com.transport.ticketservice.service.TicketService;
@@ -29,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -41,6 +44,7 @@ public class TicketServiceImpl implements TicketService {
     private static final EnumSet<TicketStatus> CONFIRMED_CAPACITY_STATUSES =
             EnumSet.of(TicketStatus.BOOKED, TicketStatus.USED);
     private static final long PAYMENT_HOLD_MINUTES = 10;
+    private static final String DOWNSTREAM_ROLE = "PASSENGER";
 
     private final TicketRepository ticketRepository;
     private final TicketMapper ticketMapper;
@@ -56,6 +60,7 @@ public class TicketServiceImpl implements TicketService {
             String rawIdempotencyKey,
             Long authenticatedUserId,
             boolean privileged) {
+        String downstreamUserId = requireDownstreamUserId(authenticatedUserId);
         Long ownerId = resolveTicketOwner(
                 request.getUserId(), authenticatedUserId, privileged);
         int passengerCount = normalizePassengerCount(request.getPassengerCount());
@@ -78,7 +83,9 @@ public class TicketServiceImpl implements TicketService {
                 request.getRouteId(),
                 request.getSourceStopId(),
                 request.getDestinationStopId(),
-                request.getScheduleId()), request);
+                request.getScheduleId(),
+                downstreamUserId,
+                DOWNSTREAM_ROLE), request);
 
         if (!LocalDateTime.of(request.getServiceDate(), fare.getDepartureTime())
                 .isAfter(LocalDateTime.now())) {
@@ -86,26 +93,23 @@ public class TicketServiceImpl implements TicketService {
                     "Selected schedule has already departed");
         }
 
-        VehicleAvailabilityResponseDto availability =
-                requireAvailability(vehicleServiceClient.getAvailability(
-                        request.getRouteId(),
-                        request.getScheduleId(),
-                        request.getServiceDate()), request);
-
-        LocalDateTime now = LocalDateTime.now();
-        long alreadyReserved = ticketRepository.countReservedPassengers(
+        SeatAvailabilityResponseDto availability = calculateSeatAvailability(
                 request.getRouteId(),
                 request.getScheduleId(),
                 request.getServiceDate(),
-                CONFIRMED_CAPACITY_STATUSES,
-                TicketStatus.PENDING_PAYMENT,
-                now);
-        if (alreadyReserved + passengerCount > availability.getCapacity()) {
+                downstreamUserId,
+                DOWNSTREAM_ROLE);
+        if (!availability.isAssigned()) {
             throw new SeatUnavailableException(
-                    "Only " + Math.max(
-                            availability.getCapacity() - alreadyReserved, 0)
+                    "No active vehicle assignment is available for this schedule");
+        }
+        if (passengerCount > availability.getRemainingSeats()) {
+            throw new SeatUnavailableException(
+                    "Only " + availability.getRemainingSeats()
                             + " seat(s) remain for this schedule");
         }
+
+        LocalDateTime now = LocalDateTime.now();
 
         BigDecimal unitFare = fare.getFare().setScale(2, RoundingMode.HALF_UP);
         BigDecimal totalFare = unitFare
@@ -134,6 +138,25 @@ public class TicketServiceImpl implements TicketService {
                         request.getServiceDate(), fare.getDepartureTime()))
                 .build();
         return ticketMapper.toResponseDto(ticketRepository.save(ticket));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public SeatAvailabilityResponseDto getSeatAvailability(
+            Long routeId, Long scheduleId, LocalDate serviceDate,
+            Long authenticatedUserId) {
+        if (routeId == null || scheduleId == null || serviceDate == null) {
+            throw new IllegalArgumentException(
+                    "Route, schedule and service date are required");
+        }
+        if (serviceDate.isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException(
+                    "Service date cannot be in the past");
+        }
+        return calculateSeatAvailability(
+                routeId, scheduleId, serviceDate,
+                requireDownstreamUserId(authenticatedUserId),
+                DOWNSTREAM_ROLE);
     }
 
     @Override
@@ -371,25 +394,64 @@ public class TicketServiceImpl implements TicketService {
         return fare;
     }
 
-    private VehicleAvailabilityResponseDto requireAvailability(
-            ApiResponseDto<VehicleAvailabilityResponseDto> response,
-            TicketRequestDto request) {
+    private SeatAvailabilityResponseDto calculateSeatAvailability(
+            Long routeId, Long scheduleId, LocalDate serviceDate,
+            String authenticatedUserId, String authenticatedRole) {
+        ApiResponseDto<VehicleAvailabilityResponseDto> response =
+                vehicleServiceClient.getAvailability(
+                        routeId, scheduleId, serviceDate,
+                        authenticatedUserId, authenticatedRole);
         VehicleAvailabilityResponseDto availability =
                 response == null || !response.isSuccess()
                         ? null : response.getData();
         if (availability == null
-                || !availability.isAssigned()
-                || !request.getRouteId().equals(availability.getRouteId())
-                || !request.getScheduleId().equals(availability.getScheduleId())
-                || !request.getServiceDate().equals(availability.getServiceDate())
-                || availability.getAssignmentId() == null
+                || !routeId.equals(availability.getRouteId())
+                || !scheduleId.equals(availability.getScheduleId())
+                || !serviceDate.equals(availability.getServiceDate())) {
+            throw new VehicleServiceUnavailableException(
+                    "Vehicle Service returned invalid availability data");
+        }
+        if (!availability.isAssigned()) {
+            return SeatAvailabilityResponseDto.builder()
+                    .routeId(routeId)
+                    .scheduleId(scheduleId)
+                    .serviceDate(serviceDate)
+                    .assigned(false)
+                    .capacity(0)
+                    .reservedSeats(0L)
+                    .remainingSeats(0L)
+                    .available(false)
+                    .build();
+        }
+        if (availability.getAssignmentId() == null
                 || availability.getVehicleId() == null
                 || availability.getCapacity() == null
                 || availability.getCapacity() < 1) {
-            throw new SeatUnavailableException(
-                    "No active vehicle assignment is available for this schedule");
+            throw new VehicleServiceUnavailableException(
+                    "Vehicle Service returned incomplete assignment data");
         }
-        return availability;
+        Long reservedResult = ticketRepository.countReservedPassengers(
+                routeId,
+                scheduleId,
+                serviceDate,
+                CONFIRMED_CAPACITY_STATUSES,
+                TicketStatus.PENDING_PAYMENT,
+                LocalDateTime.now());
+        long reservedSeats = reservedResult == null ? 0 : reservedResult;
+        long remainingSeats = Math.max(
+                (long) availability.getCapacity() - reservedSeats, 0L);
+        return SeatAvailabilityResponseDto.builder()
+                .routeId(routeId)
+                .scheduleId(scheduleId)
+                .serviceDate(serviceDate)
+                .assigned(true)
+                .assignmentId(availability.getAssignmentId())
+                .vehicleId(availability.getVehicleId())
+                .capacity(availability.getCapacity())
+                .reservedSeats(reservedSeats)
+                .remainingSeats(remainingSeats)
+                .available(remainingSeats > 0)
+                .build();
     }
 
     private int normalizePassengerCount(Integer passengerCount) {
@@ -399,6 +461,13 @@ public class TicketServiceImpl implements TicketService {
                     "Passenger count must be between 1 and 10");
         }
         return count;
+    }
+
+    private String requireDownstreamUserId(Long authenticatedUserId) {
+        if (authenticatedUserId == null) {
+            throw new AccessDeniedException("Authenticated user is missing");
+        }
+        return authenticatedUserId.toString();
     }
 
     private String normalizeIdempotencyKey(String rawKey) {

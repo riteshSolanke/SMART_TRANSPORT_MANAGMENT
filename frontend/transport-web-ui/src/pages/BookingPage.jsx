@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useForm, useWatch } from 'react-hook-form'
@@ -17,10 +17,11 @@ import toast from 'react-hot-toast'
 import ErrorState from '../components/ui/ErrorState.jsx'
 import PageLoader from '../components/ui/PageLoader.jsx'
 import SectionHeader from '../components/ui/SectionHeader.jsx'
+import { useAuth } from '../context/authContext.js'
 import { routesApi, ticketsApi } from '../lib/api.js'
 import { getErrorMessage } from '../lib/apiClient.js'
 import {
-  createIdempotencyKey,
+  createIdempotencyAttempt,
   formatCurrency,
   formatTime,
 } from '../lib/formatters.js'
@@ -31,6 +32,8 @@ export default function BookingPage() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const { role } = useAuth()
+  const bookingAttemptRef = useRef(createIdempotencyAttempt('booking'))
   const preselectedRoute = searchParams.get('routeId') || ''
   const { register, handleSubmit, control, setValue, formState: { errors } } = useForm({
     defaultValues: {
@@ -43,7 +46,14 @@ export default function BookingPage() {
     },
   })
 
-  const [routeId, scheduleId, sourceStopId, destinationStopId, passengerCountValue] =
+  const [
+    routeId,
+    scheduleId,
+    sourceStopId,
+    destinationStopId,
+    serviceDate,
+    passengerCountValue,
+  ] =
     useWatch({
       control,
       name: [
@@ -51,6 +61,7 @@ export default function BookingPage() {
         'scheduleId',
         'sourceStopId',
         'destinationStopId',
+        'serviceDate',
         'passengerCount',
       ],
     })
@@ -72,6 +83,31 @@ export default function BookingPage() {
       }),
     enabled: Boolean(routeId && sourceStopId && destinationStopId),
   })
+  const availabilityQuery = useQuery({
+    queryKey: ['tickets', 'availability', routeId, scheduleId, serviceDate],
+    queryFn: () =>
+      ticketsApi.availability({
+        routeId: Number(routeId),
+        scheduleId: Number(scheduleId),
+        serviceDate,
+      }),
+    enabled: Boolean(routeId && scheduleId && serviceDate),
+    staleTime: 10_000,
+    retry: false,
+    refetchOnWindowFocus: false,
+  })
+  const remainingSeats = availabilityQuery.data?.assigned
+    ? Number(availabilityQuery.data.remainingSeats)
+    : null
+  const maxPassengerCount = remainingSeats === null
+    ? 10
+    : Math.max(0, Math.min(10, remainingSeats))
+  const availabilityErrorMessage = availabilityQuery.isError
+    ? getErrorMessage(
+        availabilityQuery.error,
+        'Unable to check seat availability. Please retry.',
+      )
+    : ''
 
   useEffect(() => {
     if (!routeQuery.data || scheduleId) return
@@ -79,11 +115,21 @@ export default function BookingPage() {
     if (firstSchedule) setValue('scheduleId', String(firstSchedule.scheduleId))
   }, [routeQuery.data, scheduleId, setValue])
 
+  useEffect(() => {
+    if (maxPassengerCount > 0 && passengerCount > maxPassengerCount) {
+      setValue('passengerCount', maxPassengerCount)
+    }
+  }, [maxPassengerCount, passengerCount, setValue])
+
   const booking = useMutation({
     mutationFn: (payload) =>
-      ticketsApi.book(payload, createIdempotencyKey('booking')),
+      ticketsApi.book(payload, bookingAttemptRef.current.keyFor(payload)),
+    retry: (failureCount, error) =>
+      failureCount < 1 && [502, 503, 504].includes(error?.response?.status),
     onSuccess: (ticket) => {
+      bookingAttemptRef.current.reset()
       queryClient.invalidateQueries({ queryKey: ['tickets'] })
+      queryClient.invalidateQueries({ queryKey: ['tickets', 'availability'] })
       toast.success('Ticket reserved. Complete payment before it expires.')
       navigate(`/payments?ticketId=${ticket.ticketId}&amount=${ticket.fareAmount}`, {
         replace: true,
@@ -126,9 +172,13 @@ export default function BookingPage() {
   return (
     <div className="page-stack">
       <SectionHeader
-        eyebrow="Passenger booking"
-        title="Build your journey"
-        description="Choose the service details below. Your fare is calculated by the route service."
+        eyebrow={role === 'CONDUCTOR' ? 'Conductor ticketing' : 'Passenger booking'}
+        title={role === 'CONDUCTOR' ? 'Issue a walk-up ticket' : 'Build your journey'}
+        description={
+          role === 'CONDUCTOR'
+            ? 'No passenger account or mobile number is required. Issue the PNR and collect the fare.'
+            : 'Choose the service details below. Your fare is calculated by the route service.'
+        }
         actions={
           <Link className="button button--ghost" to="/routes">
             <FiArrowLeft /> Back to routes
@@ -151,7 +201,9 @@ export default function BookingPage() {
               <span className="eyebrow">Journey details</span>
               <h3>Select your service</h3>
             </div>
-            <span className="secure-pill"><FiShield /> Secure reservation</span>
+            <span className="secure-pill">
+              <FiShield /> {role === 'CONDUCTOR' ? 'Conductor issued' : 'Secure reservation'}
+            </span>
           </div>
 
           <div className="form-stack">
@@ -262,7 +314,10 @@ export default function BookingPage() {
                     <div className="field__control">
                       <FiUsers />
                       <select {...register('passengerCount')}>
-                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((count) => (
+                        {Array.from(
+                          { length: Math.max(maxPassengerCount, 1) },
+                          (_, index) => index + 1,
+                        ).map((count) => (
                           <option value={count} key={count}>{count}</option>
                         ))}
                       </select>
@@ -294,6 +349,20 @@ export default function BookingPage() {
           <div className="booking-summary__details">
             <span><FiUsers /> Passengers <strong>{passengerCount}</strong></span>
             <span>
+              <FiUsers /> Seats available
+              <strong>
+                {availabilityQuery.isFetching
+                  ? 'Checking...'
+                  : availabilityQuery.isError
+                    ? 'Check failed'
+                    : availabilityQuery.data?.assigned
+                      ? `${availabilityQuery.data.remainingSeats} of ${availabilityQuery.data.capacity}`
+                      : scheduleId
+                        ? 'No vehicle assigned'
+                        : 'Select schedule'}
+              </strong>
+            </span>
+            <span>
               <FiMapPin /> Distance
               <strong>{fareQuery.data?.distanceKm ? `${fareQuery.data.distanceKm} km` : '—'}</strong>
             </span>
@@ -303,6 +372,18 @@ export default function BookingPage() {
               </span>
             )}
           </div>
+          {availabilityQuery.isError && (
+            <div>
+              <p className="field__error">{availabilityErrorMessage}</p>
+              <button
+                type="button"
+                className="button button--ghost button--small"
+                onClick={() => availabilityQuery.refetch()}
+              >
+                Retry seat check
+              </button>
+            </div>
+          )}
           <div className="booking-summary__fare">
             <div>
               <span>Total fare</span>
@@ -316,14 +397,23 @@ export default function BookingPage() {
           </div>
           <button
             className="button button--primary button--block"
-            disabled={booking.isPending || !fareQuery.data || !scheduleId}
+            disabled={
+              booking.isPending ||
+              !fareQuery.data ||
+              !scheduleId ||
+              availabilityQuery.isFetching ||
+              !availabilityQuery.data?.available ||
+              (remainingSeats !== null && passengerCount > remainingSeats)
+            }
           >
             {booking.isPending ? <span className="button-spinner" /> : <FiCheckCircle />}
             Reserve and continue
             {!booking.isPending && <FiArrowRight />}
           </button>
           <p className="booking-summary__secure">
-            <FiShield /> Your seat is held temporarily while payment is completed.
+            <FiShield /> {role === 'CONDUCTOR'
+              ? 'Give the generated PNR to the passenger after collecting payment.'
+              : 'Your seat is held temporarily while payment is completed.'}
           </p>
         </aside>
       </form>

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  createIdempotencyAttempt,
   createIdempotencyKey,
   formatCurrency,
   formatNumber,
@@ -25,5 +26,18 @@ describe('formatters', () => {
 
   it('creates keys scoped to the requested operation', () => {
     expect(createIdempotencyKey('booking')).toMatch(/^booking-.+/)
+  })
+
+  it('reuses an idempotency key until an attempt succeeds or changes', () => {
+    const attempt = createIdempotencyAttempt('booking')
+    const payload = { routeId: 1, passengerCount: 2 }
+    const firstKey = attempt.keyFor(payload)
+
+    expect(attempt.keyFor({ ...payload })).toBe(firstKey)
+    expect(attempt.keyFor({ ...payload, passengerCount: 3 })).not.toBe(firstKey)
+
+    const changedKey = attempt.keyFor(payload)
+    attempt.reset()
+    expect(attempt.keyFor(payload)).not.toBe(changedKey)
   })
 })

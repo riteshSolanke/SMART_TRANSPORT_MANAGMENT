@@ -62,7 +62,9 @@ class TicketServiceAuthorizationTest {
                 org.mockito.ArgumentMatchers.anyLong(),
                 org.mockito.ArgumentMatchers.anyLong(),
                 org.mockito.ArgumentMatchers.anyLong(),
-                org.mockito.ArgumentMatchers.anyLong());
+                org.mockito.ArgumentMatchers.anyLong(),
+                org.mockito.ArgumentMatchers.anyString(),
+                org.mockito.ArgumentMatchers.anyString());
         verify(ticketRepository, never()).save(
                 org.mockito.ArgumentMatchers.any(Ticket.class));
     }

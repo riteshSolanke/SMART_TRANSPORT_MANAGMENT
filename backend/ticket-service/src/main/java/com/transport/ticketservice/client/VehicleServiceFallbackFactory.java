@@ -18,7 +18,8 @@ public class VehicleServiceFallbackFactory
         return new VehicleServiceClient() {
             @Override
             public ApiResponseDto<VehicleAvailabilityResponseDto> getAvailability(
-                    Long routeId, Long scheduleId, LocalDate serviceDate) {
+                    Long routeId, Long scheduleId, LocalDate serviceDate,
+                    String userId, String role) {
                 log.error(
                         "Vehicle Service call failed for routeId={}, scheduleId={}, serviceDate={}. Cause: {}",
                         routeId, scheduleId, serviceDate,

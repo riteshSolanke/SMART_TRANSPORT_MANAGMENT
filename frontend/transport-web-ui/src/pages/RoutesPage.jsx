@@ -244,7 +244,7 @@ export default function RoutesPage() {
                       )}
                     </div>
                     <div className="route-card__actions">
-                      {(role === 'PASSENGER' || role === 'ADMIN') && (
+                      {(['PASSENGER', 'CONDUCTOR', 'ADMIN'].includes(role)) && (
                         <Link
                           className="button button--primary button--small"
                           to={`/book?routeId=${route.routeId}${

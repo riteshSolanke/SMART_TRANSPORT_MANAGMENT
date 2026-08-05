@@ -26,13 +26,13 @@ export const navigationItems = [
     label: 'My tickets',
     path: '/tickets',
     icon: FiTag,
-    roles: ['PASSENGER', 'TRANSPORT_MANAGER', 'ADMIN'],
+    roles: ['PASSENGER', 'CONDUCTOR', 'TRANSPORT_MANAGER', 'ADMIN'],
   },
   {
     label: 'Payments',
     path: '/payments',
     icon: FiCreditCard,
-    roles: ['PASSENGER', 'ADMIN'],
+    roles: ['PASSENGER', 'CONDUCTOR', 'ADMIN'],
   },
   {
     label: 'Fleet',

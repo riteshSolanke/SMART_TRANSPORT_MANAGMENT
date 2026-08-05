@@ -42,3 +42,23 @@ export function createIdempotencyKey(prefix) {
   return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`
 }
 
+export function createIdempotencyAttempt(prefix) {
+  let currentAttempt = null
+
+  return {
+    keyFor(payload) {
+      const fingerprint = JSON.stringify(payload)
+      if (!currentAttempt || currentAttempt.fingerprint !== fingerprint) {
+        currentAttempt = {
+          fingerprint,
+          key: createIdempotencyKey(prefix),
+        }
+      }
+      return currentAttempt.key
+    },
+    reset() {
+      currentAttempt = null
+    },
+  }
+}
+

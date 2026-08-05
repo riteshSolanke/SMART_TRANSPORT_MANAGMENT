@@ -7,6 +7,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestHeader;
 
 import java.time.LocalDate;
 
@@ -21,5 +22,7 @@ public interface VehicleServiceClient {
             @RequestParam("scheduleId") Long scheduleId,
             @RequestParam("serviceDate")
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-            LocalDate serviceDate);
+            LocalDate serviceDate,
+            @RequestHeader("X-User-Id") String userId,
+            @RequestHeader("X-User-Role") String role);
 }

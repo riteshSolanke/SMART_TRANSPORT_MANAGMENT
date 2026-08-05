@@ -11,14 +11,12 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 
-
 @Component
 @Slf4j
 public class LoggingFilter implements GlobalFilter, Ordered {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange,
                              GatewayFilterChain chain) {
-
 
         Route route = exchange.getAttribute(
                 ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR);

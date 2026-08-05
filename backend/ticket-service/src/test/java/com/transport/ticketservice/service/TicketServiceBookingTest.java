@@ -5,6 +5,7 @@ import com.transport.ticketservice.client.VehicleServiceClient;
 import com.transport.ticketservice.dto.request.TicketRequestDto;
 import com.transport.ticketservice.dto.response.ApiResponseDto;
 import com.transport.ticketservice.dto.response.FareResponseDto;
+import com.transport.ticketservice.dto.response.SeatAvailabilityResponseDto;
 import com.transport.ticketservice.dto.response.VehicleAvailabilityResponseDto;
 import com.transport.ticketservice.entity.Ticket;
 import com.transport.ticketservice.enums.TicketStatus;
@@ -118,13 +119,14 @@ class TicketServiceBookingTest {
     @Test
     void rejectsBookingWithoutAssignedVehicle() {
         TicketRequestDto request = request();
-        when(routeServiceClient.getFare(10L, 100L, 200L, 20L))
+        when(routeServiceClient.getFare(
+                10L, 100L, 200L, 20L, "42", "PASSENGER"))
                 .thenReturn(ApiResponseDto.success(fare()));
         VehicleAvailabilityResponseDto availability =
                 availability(request, 0);
         availability.setAssigned(false);
         when(vehicleServiceClient.getAvailability(
-                10L, 20L, request.getServiceDate()))
+                10L, 20L, request.getServiceDate(), "42", "PASSENGER"))
                 .thenReturn(ApiResponseDto.success(availability));
 
         assertThatThrownBy(() -> service.bookTicket(
@@ -144,11 +146,54 @@ class TicketServiceBookingTest {
     }
 
     @Test
+    void reportsRemainingSeatsForAssignedVehicle() {
+        TicketRequestDto request = request();
+        when(vehicleServiceClient.getAvailability(
+                10L, 20L, request.getServiceDate(), "42", "PASSENGER"))
+                .thenReturn(ApiResponseDto.success(
+                        availability(request, 40)));
+        when(ticketRepository.countReservedPassengers(
+                eq(10L), eq(20L), eq(request.getServiceDate()),
+                anyCollection(), eq(TicketStatus.PENDING_PAYMENT),
+                any(LocalDateTime.class))).thenReturn(7L);
+
+        SeatAvailabilityResponseDto response =
+                service.getSeatAvailability(
+                        10L, 20L, request.getServiceDate(), 42L);
+
+        assertThat(response.isAssigned()).isTrue();
+        assertThat(response.getCapacity()).isEqualTo(40);
+        assertThat(response.getReservedSeats()).isEqualTo(7L);
+        assertThat(response.getRemainingSeats()).isEqualTo(33L);
+        assertThat(response.isAvailable()).isTrue();
+    }
+
+    @Test
+    void reportsUnavailableWhenNoVehicleIsAssigned() {
+        TicketRequestDto request = request();
+        VehicleAvailabilityResponseDto availability =
+                availability(request, 0);
+        availability.setAssigned(false);
+        when(vehicleServiceClient.getAvailability(
+                10L, 20L, request.getServiceDate(), "42", "PASSENGER"))
+                .thenReturn(ApiResponseDto.success(availability));
+
+        SeatAvailabilityResponseDto response =
+                service.getSeatAvailability(
+                        10L, 20L, request.getServiceDate(), 42L);
+
+        assertThat(response.isAssigned()).isFalse();
+        assertThat(response.getRemainingSeats()).isZero();
+        assertThat(response.isAvailable()).isFalse();
+    }
+
+    @Test
     void rejectsMismatchedFareResponse() {
         TicketRequestDto request = request();
         FareResponseDto fare = fare();
         fare.setScheduleId(999L);
-        when(routeServiceClient.getFare(10L, 100L, 200L, 20L))
+        when(routeServiceClient.getFare(
+                10L, 100L, 200L, 20L, "42", "PASSENGER"))
                 .thenReturn(ApiResponseDto.success(fare));
 
         assertThatThrownBy(() -> service.bookTicket(
@@ -196,10 +241,11 @@ class TicketServiceBookingTest {
 
     private void stubDependencies(
             TicketRequestDto request, int capacity, long reserved) {
-        when(routeServiceClient.getFare(10L, 100L, 200L, 20L))
+        when(routeServiceClient.getFare(
+                10L, 100L, 200L, 20L, "42", "PASSENGER"))
                 .thenReturn(ApiResponseDto.success(fare()));
         when(vehicleServiceClient.getAvailability(
-                10L, 20L, request.getServiceDate()))
+                10L, 20L, request.getServiceDate(), "42", "PASSENGER"))
                 .thenReturn(ApiResponseDto.success(
                         availability(request, capacity)));
         when(ticketRepository.countReservedPassengers(

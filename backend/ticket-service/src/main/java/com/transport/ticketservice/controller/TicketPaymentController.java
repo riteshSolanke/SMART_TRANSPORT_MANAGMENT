@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/tickets/{ticketId}/payment")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('PASSENGER','ADMIN')")
+@PreAuthorize("hasAnyRole('PASSENGER','CONDUCTOR','ADMIN')")
 public class TicketPaymentController {
     private final TicketService ticketService;
     private final PaymentServiceKeyValidator paymentServiceKeyValidator;

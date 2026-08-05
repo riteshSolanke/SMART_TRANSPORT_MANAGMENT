@@ -48,7 +48,7 @@ function App() {
             <Route path="/routes" element={<RoutesPage />} />
             <Route
               path="/book"
-              element={<ProtectedRoute allowedRoles={['PASSENGER', 'ADMIN']} />}
+              element={<ProtectedRoute allowedRoles={['PASSENGER', 'CONDUCTOR', 'ADMIN']} />}
             >
               <Route index element={<BookingPage />} />
             </Route>
@@ -71,14 +71,14 @@ function App() {
             <Route
               path="/tickets"
               element={
-                <ProtectedRoute allowedRoles={['PASSENGER', 'TRANSPORT_MANAGER', 'ADMIN']} />
+                <ProtectedRoute allowedRoles={['PASSENGER', 'CONDUCTOR', 'TRANSPORT_MANAGER', 'ADMIN']} />
               }
             >
               <Route index element={<TicketsPage />} />
             </Route>
             <Route
               path="/payments"
-              element={<ProtectedRoute allowedRoles={['PASSENGER', 'ADMIN']} />}
+              element={<ProtectedRoute allowedRoles={['PASSENGER', 'CONDUCTOR', 'ADMIN']} />}
             >
               <Route index element={<PaymentsPage />} />
             </Route>

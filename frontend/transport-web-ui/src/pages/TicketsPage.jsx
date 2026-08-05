@@ -17,6 +17,7 @@ import Modal from '../components/ui/Modal.jsx'
 import PageLoader from '../components/ui/PageLoader.jsx'
 import SectionHeader from '../components/ui/SectionHeader.jsx'
 import StatusBadge from '../components/ui/StatusBadge.jsx'
+import { useAuth } from '../context/authContext.js'
 import { confirmAction } from '../lib/alerts.js'
 import { ticketsApi } from '../lib/api.js'
 import { getErrorMessage } from '../lib/apiClient.js'
@@ -31,6 +32,7 @@ const tabs = [
 
 export default function TicketsPage() {
   const queryClient = useQueryClient()
+  const { role } = useAuth()
   const [activeTab, setActiveTab] = useState('all')
   const [pnr, setPnr] = useState('')
   const [selectedTicket, setSelectedTicket] = useState(null)
@@ -87,12 +89,16 @@ export default function TicketsPage() {
   return (
     <div className="page-stack">
       <SectionHeader
-        eyebrow="Journey wallet"
-        title="Your tickets"
-        description="Keep every booking, payment status and journey detail in one place."
+        eyebrow={role === 'CONDUCTOR' ? 'Conductor ticketing' : 'Journey wallet'}
+        title={role === 'CONDUCTOR' ? 'Issued tickets' : 'Your tickets'}
+        description={
+          role === 'CONDUCTOR'
+            ? 'Review walk-up tickets issued through your conductor account and find them by PNR.'
+            : 'Keep every booking, payment status and journey detail in one place.'
+        }
         actions={
           <Link className="button button--primary" to="/routes">
-            <FiSearch /> Book a journey
+            <FiSearch /> {role === 'CONDUCTOR' ? 'Issue ticket' : 'Book a journey'}
           </Link>
         }
       />

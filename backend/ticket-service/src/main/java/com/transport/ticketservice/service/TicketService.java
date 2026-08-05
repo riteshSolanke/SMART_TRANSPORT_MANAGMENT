@@ -4,8 +4,10 @@ import com.transport.ticketservice.dto.request.TicketRequestDto;
 
 import com.transport.ticketservice.dto.response.TicketResponseDto;
 import com.transport.ticketservice.dto.response.TicketPaymentContextDto;
+import com.transport.ticketservice.dto.response.SeatAvailabilityResponseDto;
 import com.transport.ticketservice.dto.request.PaymentUpdateRequestDto;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface TicketService {
@@ -13,6 +15,10 @@ public interface TicketService {
     TicketResponseDto bookTicket(
             TicketRequestDto dto, String idempotencyKey,
             Long authenticatedUserId, boolean privileged);
+
+    SeatAvailabilityResponseDto getSeatAvailability(
+            Long routeId, Long scheduleId, LocalDate serviceDate,
+            Long authenticatedUserId);
 
     TicketResponseDto getTicketById(
             Long id, Long authenticatedUserId, boolean privileged);

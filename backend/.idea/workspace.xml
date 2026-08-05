@@ -5,17 +5,27 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="328f5b18-e58d-4a1b-a3ce-a0fe697cbfbc" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/../.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../.idea/compiler.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.idea/encodings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../.idea/encodings.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.idea/modules.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/backend.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/backend.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/analytics-service/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/analytics-service/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/payment-service/src/main/java/com/transport/paymentservice/controller/PaymentAnalyticsController.java" beforeDir="false" afterPath="$PROJECT_DIR$/payment-service/src/main/java/com/transport/paymentservice/controller/PaymentAnalyticsController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api-gateway/src/main/java/com/transport/apigateway/filter/LoggingFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/src/main/java/com/transport/apigateway/filter/LoggingFilter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api-gateway/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/src/main/resources/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth-service/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/auth-service/src/main/resources/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/payment-service/src/main/java/com/transport/paymentservice/controller/PaymentController.java" beforeDir="false" afterPath="$PROJECT_DIR$/payment-service/src/main/java/com/transport/paymentservice/controller/PaymentController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/route-service/src/main/java/com/transport/routeservice/RouteServiceApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/route-service/src/main/java/com/transport/routeservice/RouteServiceApplication.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ticket-service/src/main/java/com/transport/ticketservice/client/RouteServiceClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/ticket-service/src/main/java/com/transport/ticketservice/client/RouteServiceClient.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ticket-service/src/main/java/com/transport/ticketservice/client/RouteServiceFallbackFactory.java" beforeDir="false" afterPath="$PROJECT_DIR$/ticket-service/src/main/java/com/transport/ticketservice/client/RouteServiceFallbackFactory.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ticket-service/src/main/java/com/transport/ticketservice/client/VehicleServiceClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/ticket-service/src/main/java/com/transport/ticketservice/client/VehicleServiceClient.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ticket-service/src/main/java/com/transport/ticketservice/client/VehicleServiceFallbackFactory.java" beforeDir="false" afterPath="$PROJECT_DIR$/ticket-service/src/main/java/com/transport/ticketservice/client/VehicleServiceFallbackFactory.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ticket-service/src/main/java/com/transport/ticketservice/config/FeignConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/ticket-service/src/main/java/com/transport/ticketservice/config/FeignConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ticket-service/src/main/java/com/transport/ticketservice/controller/TicketController.java" beforeDir="false" afterPath="$PROJECT_DIR$/ticket-service/src/main/java/com/transport/ticketservice/controller/TicketController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ticket-service/src/main/java/com/transport/ticketservice/controller/TicketPaymentController.java" beforeDir="false" afterPath="$PROJECT_DIR$/ticket-service/src/main/java/com/transport/ticketservice/controller/TicketPaymentController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ticket-service/src/main/java/com/transport/ticketservice/exception/VehicleServiceUnavailableException.java" beforeDir="false" afterPath="$PROJECT_DIR$/ticket-service/src/main/java/com/transport/ticketservice/exception/VehicleServiceUnavailableException.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ticket-service/src/main/java/com/transport/ticketservice/service/TicketService.java" beforeDir="false" afterPath="$PROJECT_DIR$/ticket-service/src/main/java/com/transport/ticketservice/service/TicketService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ticket-service/src/main/java/com/transport/ticketservice/service/impl/TicketServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/ticket-service/src/main/java/com/transport/ticketservice/service/impl/TicketServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ticket-service/src/test/java/com/transport/ticketservice/service/TicketServiceAuthorizationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/ticket-service/src/test/java/com/transport/ticketservice/service/TicketServiceAuthorizationTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ticket-service/src/test/java/com/transport/ticketservice/service/TicketServiceBookingTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/ticket-service/src/test/java/com/transport/ticketservice/service/TicketServiceBookingTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/transport-web-ui/src/lib/api.js" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/transport-web-ui/src/lib/api.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/transport-web-ui/src/pages/RoutesPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/transport-web-ui/src/pages/RoutesPage.jsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -69,11 +79,14 @@
     &quot;Spring Boot.03-RouteServiceApplication.executor&quot;: &quot;Run&quot;,
     &quot;Spring Boot.04-TicketServiceApplication.executor&quot;: &quot;Run&quot;,
     &quot;Spring Boot.05-ApiGatewayApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Spring Boot.05-Vehicle-service.executor&quot;: &quot;Run&quot;,
     &quot;Spring Boot.06-Vehicle-service.executor&quot;: &quot;Run&quot;,
     &quot;Spring Boot.06-payment-service.executor&quot;: &quot;Run&quot;,
+    &quot;Spring Boot.07-Analytics-service.executor&quot;: &quot;Run&quot;,
     &quot;Spring Boot.07-Ticket-service.executor&quot;: &quot;Run&quot;,
     &quot;Spring Boot.07-payment-service.executor&quot;: &quot;Run&quot;,
     &quot;Spring Boot.08-Analytics-service.executor&quot;: &quot;Run&quot;,
+    &quot;Spring Boot.08-ApiGatewayApplication.executor&quot;: &quot;Run&quot;,
     &quot;Spring Boot.ApiGatewayApplication.executor&quot;: &quot;Run&quot;,
     &quot;Spring Boot.AuthServiceApplication.executor&quot;: &quot;Run&quot;,
     &quot;Spring Boot.EurekaTransportSysProjectApplication.executor&quot;: &quot;Run&quot;,
@@ -81,7 +94,7 @@
     &quot;Spring Boot.TicketServiceApplication.executor&quot;: &quot;Run&quot;,
     &quot;Spring Boot.TransportSysProjectApplication.executor&quot;: &quot;Run&quot;,
     &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;codex/phase-7-react-frontend&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;codex/phase-8-service-fix&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/Users/2507178/Desktop/project1/SMART_TRANSPORT_MANAGMENT/backend&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
@@ -93,7 +106,7 @@
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
-  <component name="RunManager" selected="Spring Boot.06-payment-service">
+  <component name="RunManager" selected="Spring Boot.08-ApiGatewayApplication">
     <configuration name="Transport-System" type="CompoundRunConfigurationType">
       <toRun name="01-EurekaTransportSysProjectApplication" type="SpringBootApplicationConfigurationType" />
       <toRun name="02-AuthServiceApplication" type="SpringBootApplicationConfigurationType" />

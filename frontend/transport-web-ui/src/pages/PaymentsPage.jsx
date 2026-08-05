@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
@@ -20,7 +20,7 @@ import { useAuth } from '../context/authContext.js'
 import { confirmAction } from '../lib/alerts.js'
 import { paymentsApi, ticketsApi } from '../lib/api.js'
 import { getErrorMessage } from '../lib/apiClient.js'
-import { createIdempotencyKey, formatCurrency, formatDate } from '../lib/formatters.js'
+import { createIdempotencyAttempt, formatCurrency, formatDate } from '../lib/formatters.js'
 
 const methods = [
   { id: 'UPI', label: 'UPI', detail: 'Fast mobile payment', icon: FiSmartphone },
@@ -35,7 +35,10 @@ export default function PaymentsPage() {
   const queryClient = useQueryClient()
   const { role } = useAuth()
   const ticketId = searchParams.get('ticketId')
-  const [paymentMethod, setPaymentMethod] = useState('UPI')
+  const [paymentMethod, setPaymentMethod] = useState(
+    role === 'CONDUCTOR' ? 'CASH' : 'UPI',
+  )
+  const paymentAttemptRef = useRef(createIdempotencyAttempt('payment'))
 
   const paymentsQuery = useQuery({
     queryKey: ['payments', 'mine'],
@@ -48,12 +51,17 @@ export default function PaymentsPage() {
   })
 
   const processPayment = useMutation({
-    mutationFn: () =>
-      paymentsApi.process(
-        { ticketId: Number(ticketId), paymentMethod },
-        createIdempotencyKey('payment'),
-      ),
+    mutationFn: () => {
+      const payload = { ticketId: Number(ticketId), paymentMethod }
+      return paymentsApi.process(
+        payload,
+        paymentAttemptRef.current.keyFor(payload),
+      )
+    },
+    retry: (failureCount, error) =>
+      failureCount < 1 && [502, 503, 504].includes(error?.response?.status),
     onSuccess: (payment) => {
+      paymentAttemptRef.current.reset()
       toast.success(
         payment.status === 'SUCCESS'
           ? 'Payment completed and ticket confirmed'
@@ -100,7 +108,9 @@ export default function PaymentsPage() {
         title={ticketId ? 'Complete payment' : 'Payment history'}
         description={
           ticketId
-            ? 'Choose a payment method to confirm your reserved ticket.'
+            ? role === 'CONDUCTOR'
+              ? 'Record the fare collected from the walk-up passenger to confirm the ticket.'
+              : 'Choose a payment method to confirm your reserved ticket.'
             : 'Review successful, failed and refunded fare transactions.'
         }
         actions={
@@ -180,7 +190,9 @@ export default function PaymentsPage() {
               onClick={() => processPayment.mutate()}
             >
               {processPayment.isPending ? <span className="button-spinner" /> : <FiShield />}
-              Pay securely
+              {role === 'CONDUCTOR' && paymentMethod === 'CASH'
+                ? 'Record cash payment'
+                : 'Pay securely'}
               {!processPayment.isPending && <FiArrowRight />}
             </button>
             {ticket && ticket.status !== 'PENDING_PAYMENT' && (

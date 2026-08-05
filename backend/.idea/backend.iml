@@ -17,5 +17,8 @@
     <orderEntry type="library" name="Maven: org.springframework.security:spring-security-config:6.5.1" level="project" />
     <orderEntry type="library" name="Maven: org.springframework.security:spring-security-web:6.5.1" level="project" />
     <orderEntry type="library" name="Maven: jakarta.validation:jakarta.validation-api:3.0.2" level="project" />
+    <orderEntry type="library" name="Maven: org.springframework.cloud:spring-cloud-openfeign-core:5.0.2" level="project" />
+    <orderEntry type="library" name="Maven: org.springframework.boot:spring-boot:4.1.0" level="project" />
+    <orderEntry type="library" name="Maven: org.springframework.boot:spring-boot-autoconfigure:3.5.3" level="project" />
   </component>
 </module>

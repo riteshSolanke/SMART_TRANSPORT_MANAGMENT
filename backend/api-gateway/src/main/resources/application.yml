@@ -65,6 +65,7 @@ spring:
                   - X-Correlation-Id
                 allowCredentials: true
                 maxAge: 3600
+
           routes:
 
             - id: auth-service

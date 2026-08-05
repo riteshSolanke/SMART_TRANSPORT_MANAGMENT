@@ -21,11 +21,13 @@ public class FeignConfig {
     public RequestInterceptor requestInterceptor(
             @Value("${gateway.secret-key}") String gatewaySecret) {
         return template -> {
+            template.header("X-Gateway-Key", gatewaySecret);
+
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            log.info("Feign Auth = {}", authentication);
+            log.debug("Feign authentication = {}", authentication);
 
             if (authentication == null || !authentication.isAuthenticated()) {
-                log.warn("Authentication is NULL");
+                log.debug("No thread-local authentication; using explicit Feign identity headers");
                 return;
             }
             String role = authentication.getAuthorities().stream()
@@ -34,11 +36,12 @@ public class FeignConfig {
                     .map(authority -> authority.substring(5))
                     .findFirst()
                     .orElse(null);
-            template.header("X-User-Id", authentication.getName());
-            if (role != null) {
+            if (!template.headers().containsKey("X-User-Id")) {
+                template.header("X-User-Id", authentication.getName());
+            }
+            if (role != null && !template.headers().containsKey("X-User-Role")) {
                 template.header("X-User-Role", role);
             }
-            template.header("X-Gateway-Key", gatewaySecret);
         };
     }
 }
